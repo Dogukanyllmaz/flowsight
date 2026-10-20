@@ -1,6 +1,12 @@
 export type Language = 'en' | 'tr'
 
 const en = {
+  appName: 'FlowSight',
+  'nav.label': 'Views',
+  'nav.tracker': 'Requester: where is my request?',
+  'nav.flow': 'Process owner: where does it pile up?',
+  pageNotFound: 'This page does not exist.',
+  goHome: 'Go to the request tracker',
   title: 'Request tracker',
   subtitle: 'Where is my purchase request?',
   searchLabel: 'Request number',
@@ -41,6 +47,12 @@ const en = {
 export type StringKey = keyof typeof en
 
 const tr: Record<StringKey, string> = {
+  appName: 'FlowSight',
+  'nav.label': 'Görünümler',
+  'nav.tracker': 'Talep sahibi: talebim nerede?',
+  'nav.flow': 'Süreç sahibi: nerede birikiyor?',
+  pageNotFound: 'Böyle bir sayfa yok.',
+  goHome: 'Talep takibine git',
   title: 'Talep takibi',
   subtitle: 'Satın alma talebim nerede?',
   searchLabel: 'Talep numarası',

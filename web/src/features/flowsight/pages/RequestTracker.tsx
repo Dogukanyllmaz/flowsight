@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { StageStrip } from '../components/StageStrip'
 import { useRequest, useRequestIndex } from '../data/hooks'
 import type { RequestView } from '../data/schemas'
-import { I18nProvider, useStrings } from '../i18n/I18n'
+import { I18nProvider, LanguageToggle, useStrings } from '../i18n/I18n'
 import '../flowsight.css'
 
 /** Accepts "PR-001783", "pr-1783" or "1783"; anything else is passed through and simply won't be found. */
@@ -12,22 +12,40 @@ export function normaliseCaseId(input: string): string {
   return match ? `PR-${match[1].padStart(6, '0')}` : value
 }
 
-export function RequestTracker() {
+interface TrackerProps {
+  /** Request to show on arrival (e.g. from the URL). */
+  initialCaseId?: string
+  /** Called with the normalised number whenever a request is shown. */
+  onShow?: (caseId: string) => void
+  /** Hide when the host already shows a language switch. */
+  showLanguageToggle?: boolean
+}
+
+export function RequestTracker(props: TrackerProps) {
   return (
     <I18nProvider>
-      <Tracker />
+      <Tracker {...props} />
     </I18nProvider>
   )
 }
 
-function Tracker() {
-  const { t, language, setLanguage } = useStrings()
-  const [input, setInput] = useState('')
-  const [caseId, setCaseId] = useState<string | null>(null)
+function Tracker({ initialCaseId, onShow, showLanguageToggle = true }: TrackerProps) {
+  const { t } = useStrings()
+  const [input, setInput] = useState(initialCaseId ?? '')
+  const [caseId, setCaseId] = useState<string | null>(initialCaseId ? normaliseCaseId(initialCaseId) : null)
+
+  useEffect(() => {
+    if (initialCaseId) {
+      setInput(initialCaseId)
+      setCaseId(normaliseCaseId(initialCaseId))
+    }
+  }, [initialCaseId])
 
   const show = (value: string) => {
+    const normalised = normaliseCaseId(value)
     setInput(value)
-    setCaseId(normaliseCaseId(value))
+    setCaseId(normalised)
+    onShow?.(normalised)
   }
 
   const onSubmit = (event: FormEvent) => {
@@ -42,13 +60,7 @@ function Tracker() {
           <h1>{t('title')}</h1>
           <p className="fs-muted">{t('subtitle')}</p>
         </div>
-        <div className="fs-lang" role="group" aria-label="Language">
-          {(['en', 'tr'] as const).map((l) => (
-            <button key={l} type="button" aria-pressed={language === l} onClick={() => setLanguage(l)}>
-              {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
+        {showLanguageToggle && <LanguageToggle />}
       </header>
 
       <form className="fs-search" onSubmit={onSubmit}>

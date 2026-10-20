@@ -19,8 +19,14 @@ interface I18n {
 
 const I18nContext = createContext<I18n | null>(null)
 
-/** Shares the chosen language with every FlowSight component below it. */
+/** Shares the chosen language with every FlowSight component below it. Inside another provider it does nothing,
+ * so a page that brings its own provider still follows the app-wide language. */
 export function I18nProvider({ children }: { children: ReactNode }) {
+  const parent = useContext(I18nContext)
+  return parent ? <>{children}</> : <RootI18nProvider>{children}</RootI18nProvider>
+}
+
+function RootI18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(readLanguage)
 
   const setLanguage = useCallback((next: Language) => {
@@ -54,4 +60,18 @@ export function useStrings() {
   const stage = useCallback((name: StageName) => strings[language][`stage.${name}`], [language])
 
   return { language, setLanguage: context?.setLanguage ?? (() => {}), t, stage }
+}
+
+/** EN / TR switch. */
+export function LanguageToggle() {
+  const { language, setLanguage } = useStrings()
+  return (
+    <div className="fs-lang" role="group" aria-label="Language">
+      {(['en', 'tr'] as const).map((l) => (
+        <button key={l} type="button" aria-pressed={language === l} onClick={() => setLanguage(l)}>
+          {l.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  )
 }

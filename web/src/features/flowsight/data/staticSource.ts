@@ -1,5 +1,8 @@
-import { demoMetaSchema, requestIndexSchema, requestViewSchema } from './schemas'
+import { overviewViewSchema, periodsViewSchema, stageDetailViewSchema } from './ownerSchemas'
+import { demoMetaSchema, requestIndexSchema, requestViewSchema, stageNames } from './schemas'
 import type { FlowSightSource } from './source'
+
+const periodPattern = /^(\d{4}-\d{2}|last12)$/
 
 /** Reads the JSON files written by `flowsight demo` from `${baseUrl}data/`. */
 export function createStaticSource(baseUrl: string): FlowSightSource {
@@ -28,6 +31,19 @@ export function createStaticSource(baseUrl: string): FlowSightSource {
       if (!/^PR-\d{6}$/.test(caseId)) return null
       const data = await get(`requests/${caseId}.json`)
       return data === null ? null : requestViewSchema.parse(data)
+    },
+    async getPeriods() {
+      return periodsViewSchema.parse(await get('owner/periods.json'))
+    },
+    async getOverview(periodId) {
+      if (!periodPattern.test(periodId)) return null
+      const data = await get(`owner/overview/${periodId}.json`)
+      return data === null ? null : overviewViewSchema.parse(data)
+    },
+    async getStageDetail(periodId, stage) {
+      if (!periodPattern.test(periodId) || !(stageNames as readonly string[]).includes(stage)) return null
+      const data = await get(`owner/stages/${periodId}/${stage}.json`)
+      return data === null ? null : stageDetailViewSchema.parse(data)
     },
   }
 }
