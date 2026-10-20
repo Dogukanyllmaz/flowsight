@@ -4,6 +4,7 @@ using FlowSight.Core.Calendar;
 using FlowSight.Core.Export;
 using FlowSight.Core.Journeys;
 using FlowSight.Core.Model;
+using FlowSight.Core.Statistics;
 using FlowSight.Synthetic;
 
 namespace FlowSight.Cli;
@@ -54,6 +55,37 @@ public static class DemoExporter
 
         Write(Path.Combine(outDir, "meta.json"), new DemoMeta(
             log.AsOf, seed, requests, calendar.MinutesPerDay, Stages.All.Select(JsonDefaults.Name).ToList()));
+
+        WriteOwner(Path.Combine(outDir, "owner"), log, lines, calendar);
+    }
+
+    /// <summary>Process-owner statistics: periods and trend, one overview per period, one drill-down per period and stage.</summary>
+    private static void WriteOwner(string ownerDir, EventLog log, IReadOnlyList<LineJourney> lines, WorkCalendar calendar)
+    {
+        var overviewDir = Directory.CreateDirectory(Path.Combine(ownerDir, "overview")).FullName;
+        var stagesDir = Directory.CreateDirectory(Path.Combine(ownerDir, "stages")).FullName;
+
+        // Remove only files this exporter writes.
+        foreach (var stale in Directory.GetFiles(overviewDir, "*.json")
+                     .Concat(Directory.GetDirectories(stagesDir).SelectMany(d => Directory.GetFiles(d, "*.json")))
+                     .Append(Path.Combine(ownerDir, "periods.json")))
+            File.Delete(stale);
+
+        var periods = Periods.For(log);
+        var baseline = StageStatistics.Compute(lines, periods[^1], calendar);
+        Write(Path.Combine(ownerDir, "periods.json"), OwnerViews.Periods(periods, lines, calendar.MinutesPerDay));
+
+        foreach (var period in periods)
+        {
+            var stats = period.Id == Periods.Last12Id ? baseline : StageStatistics.Compute(lines, period, calendar);
+            Write(Path.Combine(overviewDir, $"{period.Id}.json"),
+                OwnerViews.Overview(period, stats, Bottlenecks.Rank(stats, baseline), calendar.MinutesPerDay));
+
+            var periodDir = Directory.CreateDirectory(Path.Combine(stagesDir, period.Id)).FullName;
+            foreach (var stage in Stages.All)
+                Write(Path.Combine(periodDir, $"{JsonDefaults.Name(stage)}.json"),
+                    OwnerViews.StageDetail(StageDrillDown.Compute(log, lines, stage, period, calendar), calendar.MinutesPerDay));
+        }
     }
 
     private static void Write<T>(string path, T value) =>
