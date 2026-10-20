@@ -8,7 +8,7 @@ public static class JourneyBuilder
 {
     public static IReadOnlyList<LineJourney> Build(EventLog log, IWorkCalendar calendar)
     {
-        var eventsByLine = CutOff(log.Events, log.AsOf)
+        var eventsByLine = ApplyCutOff(log).Events
             .GroupBy(e => (e.CaseId, e.LineId))
             .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -18,15 +18,19 @@ public static class JourneyBuilder
     }
 
     /// <summary>Drops events queued after the as-of date and reopens steps completed after it.</summary>
-    private static IEnumerable<StepEvent> CutOff(IEnumerable<StepEvent> events, DateTimeOffset asOf) =>
-        events
-            .Where(e => e.QueuedAt <= asOf)
-            .Select(e => e with
-            {
-                StartedAt = e.StartedAt > asOf ? null : e.StartedAt,
-                CompletedAt = e.CompletedAt > asOf ? null : e.CompletedAt,
-                Outcome = e.CompletedAt > asOf ? null : e.Outcome
-            });
+    public static EventLog ApplyCutOff(EventLog log) =>
+        log with
+        {
+            Events = log.Events
+                .Where(e => e.QueuedAt <= log.AsOf)
+                .Select(e => e with
+                {
+                    StartedAt = e.StartedAt > log.AsOf ? null : e.StartedAt,
+                    CompletedAt = e.CompletedAt > log.AsOf ? null : e.CompletedAt,
+                    Outcome = e.CompletedAt > log.AsOf ? null : e.Outcome
+                })
+                .ToList()
+        };
 
     private static LineJourney BuildLine(RequestLine line, List<StepEvent> events, DateTimeOffset asOf, IWorkCalendar calendar)
     {
