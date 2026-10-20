@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FlowSight.Core\FlowSight.Core.csproj" />
+    <ProjectReference Include="..\..\src\FlowSight.Synthetic\FlowSight.Synthetic.csproj" />
   </ItemGroup>
 
 </Project>

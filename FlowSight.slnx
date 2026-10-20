@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/FlowSight.Core/FlowSight.Core.csproj" />
+    <Project Path="src/FlowSight.Synthetic/FlowSight.Synthetic.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FlowSight.Tests/FlowSight.Tests.csproj" />
