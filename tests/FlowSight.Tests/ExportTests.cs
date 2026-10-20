@@ -78,6 +78,61 @@ public class ExportTests
         Assert.Equal(Hashes(a), Hashes(b));
     }
 
+    private static IEnumerable<LineJourney> Similar(string category, double from, double step) =>
+        Enumerable.Range(0, 10).Select(i => Line($"S{i}", LineStatus.Completed, null, from + i * step, caseId: $"{category}-{i}", category: category,
+            minutesPerStage: new Dictionary<Stage, double> { [Stage.Invoice] = from + i * step }));
+
+    [Fact]
+    public void RejectedRequest_HasNoComparison()
+    {
+        var request = Line("L1", LineStatus.Rejected, Stage.Approval, 900);
+        var all = Similar("Spare parts", 100, 100).Append(request).ToList();
+
+        var view = RequestViewBuilder.Build(RequestAggregator.Build([request]).Single(), all, 540, AsOf);
+
+        Assert.Null(view.SlowerThanPercent);
+    }
+
+    [Fact]
+    public void OpenRequest_FasterThanAllSimilar_HasNoComparison()
+    {
+        var request = Line("L1", LineStatus.Open, Stage.Approval, 50);
+        var all = Similar("Spare parts", 100, 100).Append(request).ToList();
+
+        var view = RequestViewBuilder.Build(RequestAggregator.Build([request]).Single(), all, 540, AsOf);
+
+        Assert.Null(view.SlowerThanPercent);
+    }
+
+    [Fact]
+    public void RequestStageTypical_ComesFromTheLineDefiningTheStageTime()
+    {
+        var sparePart = Line("L1", LineStatus.Open, Stage.Invoice, 5000, caseId: "R", category: "Spare parts",
+            minutesPerStage: new Dictionary<Stage, double> { [Stage.Invoice] = 900 });
+        var hardware = Line("L2", LineStatus.Open, Stage.Order, 6000, caseId: "R", category: "IT hardware");
+        var all = Similar("Spare parts", 100, 100).Concat(Similar("IT hardware", 1000, 1000)).Append(sparePart).Append(hardware).ToList();
+
+        var view = RequestViewBuilder.Build(RequestAggregator.Build([sparePart, hardware]).Single(), all, 540, AsOf);
+
+        var invoice = view.Stages.Single(s => s.Stage == "invoice");
+        Assert.Equal(1.7, invoice.WorkingDays);          // 900 / 540
+        Assert.Equal(1.0, invoice.TypicalWorkingDays);   // median 550 of spare parts, not 5500 of IT hardware
+    }
+
+    [Fact]
+    public void Demo_KeepsUnrelatedFilesInTheRequestsFolder()
+    {
+        var dir = TempDir();
+        var requests = Directory.CreateDirectory(Path.Combine(dir, "requests")).FullName;
+        File.WriteAllText(Path.Combine(requests, "notes.txt"), "keep me");
+        File.WriteAllText(Path.Combine(requests, "PR-999999.json"), "{}");
+
+        DemoExporter.Run(dir, seed: 42, requests: 5);
+
+        Assert.True(File.Exists(Path.Combine(requests, "notes.txt")));
+        Assert.False(File.Exists(Path.Combine(requests, "PR-999999.json")));
+    }
+
     private static string TempDir() => Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "flowsight-" + Guid.NewGuid().ToString("N"))).FullName;
 
     private static List<string> Hashes(string dir) =>

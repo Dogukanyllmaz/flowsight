@@ -63,6 +63,16 @@ public class RequestAggregatorTests
     }
 
     [Fact]
+    public void InProgressStage_CountsOnlyLinesStillThere()
+    {
+        var r = RequestAggregator.Build([
+            Line("L1", LineStatus.Open, Stage.Purchasing, minutesPerStage: new Dictionary<Stage, double> { [Stage.Purchasing] = 100 }),
+            Line("L2", LineStatus.Open, Stage.Invoice, minutesPerStage: new Dictionary<Stage, double> { [Stage.Purchasing] = 500 })]).Single();
+
+        Assert.Equal(100, r.Stages.Single(s => s.Stage == Stage.Purchasing).WorkingMinutes);
+    }
+
+    [Fact]
     public void GroupsLinesByCase()
     {
         var requests = RequestAggregator.Build([

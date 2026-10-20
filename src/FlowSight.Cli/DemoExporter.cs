@@ -36,9 +36,10 @@ public static class DemoExporter
             .GroupBy(l => (l.Line.Path, l.Line.ItemCategory))
             .ToDictionary(g => g.Key, g => (IReadOnlyList<LineJourney>)g.ToList());
 
-        var requestDir = Path.Combine(outDir, "requests");
-        if (Directory.Exists(requestDir)) Directory.Delete(requestDir, recursive: true);
-        Directory.CreateDirectory(requestDir);
+        // Remove only files this exporter writes; anything else in the folder is left alone.
+        var requestDir = Directory.CreateDirectory(Path.Combine(outDir, "requests")).FullName;
+        foreach (var stale in Directory.GetFiles(requestDir, "PR-*.json").Append(Path.Combine(requestDir, "index.json")))
+            File.Delete(stale);
 
         foreach (var journey in journeys)
         {

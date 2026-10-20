@@ -26,13 +26,19 @@ public static class RequestViewBuilder
             .ThenByDescending(l => l.TotalWorkingMinutes)
             .First();
 
+        // Only open and paid requests are comparable with completed journeys; "slower than 0 %" says nothing.
+        var slowerThan = request.Status is RequestStatus.Open or RequestStatus.Completed
+            ? Similarity.SlowerThanPercent(representative, allLines)
+            : null;
+        if (slowerThan == 0) slowerThan = null;
+
         return new RequestView(
             request.CaseId,
             Name(request.Status),
             request.CurrentStage is { } current ? Name(current) : null,
             Days(request.TotalWorkingMinutes),
-            Similarity.SlowerThanPercent(representative, allLines),
-            request.Stages.Select(s => View(s, representative)).ToList(),
+            slowerThan,
+            request.Stages.Select(s => View(s, RequestAggregator.DefiningLine(request.Lines, s.Stage))).ToList(),
             request.Lines.Select(line => new LineView(
                 line.Line.LineId,
                 line.Line.ItemCategory,
