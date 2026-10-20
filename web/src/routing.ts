@@ -11,7 +11,12 @@ const periodPattern = /^(\d{4}-\d{2}|last12)$/
 
 /** Hash routes: #/track, #/track/{caseId}, #/flow/{periodId}, #/flow/{periodId}/{stage}. */
 export function parseRoute(hash: string): Route {
-  const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent)
+  let parts: string[]
+  try {
+    parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent)
+  } catch {
+    return { page: 'notFound' } // malformed escape such as %E0
+  }
   const [page, a, b, ...rest] = parts
   if (rest.length > 0) return { page: 'notFound' }
 

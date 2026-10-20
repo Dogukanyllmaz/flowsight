@@ -52,6 +52,14 @@ describe('FlowOverview', () => {
     expect(within(rows[0]).getAllByText('–').length).toBeGreaterThan(0)
   })
 
+  it('shows the median including lines still waiting', async () => {
+    renderOverview(withStage('invoice', { rank: 1, sharePercent: 99, medianInclOpenDays: 12.5 }))
+
+    const rows = await bottleneckRows()
+    expect(screen.getByRole('columnheader', { name: 'Median incl. waiting' })).toBeInTheDocument()
+    expect(within(rows[0]).getByText('12.5 d')).toBeInTheDocument()
+  })
+
   it('links each stage to its drill-down', async () => {
     renderOverview()
 

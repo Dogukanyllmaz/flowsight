@@ -23,6 +23,10 @@ describe('routing', () => {
     expect(parseRoute('#/flow/03-2026')).toEqual({ page: 'notFound' })
   })
 
+  it('treats malformed escapes as not found instead of crashing', () => {
+    expect(parseRoute('#/track/%E0')).toEqual({ page: 'notFound' })
+  })
+
   it('round-trips valid routes', () => {
     for (const hash of ['#/track', '#/track/PR-001783', '#/flow/last12', '#/flow/2026-03/goodsReceipt']) {
       expect(formatRoute(parseRoute(hash))).toBe(hash)

@@ -36,6 +36,8 @@ public static class JourneyBuilder
     {
         var status = StatusOf(events);
         var terminal = status != LineStatus.Open;
+        // A rejected or cancelled line ends at its terminal step; steps it left unfinished end there too.
+        var end = terminal ? events.Max(e => e.CompletedAt) ?? asOf : asOf;
         var reached = events.Count == 0 ? (Stage?)null : events.Max(e => e.Stage);
 
         var spans = Stages.All.Select(stage =>
@@ -44,14 +46,14 @@ public static class JourneyBuilder
             if (inStage.Count == 0) return new StageSpan(stage, StageState.NotStarted, null, null, 0, 0);
 
             var open = inStage.Any(e => e.CompletedAt is null);
-            var completed = !open && (terminal || stage < reached);
-            var intervals = Merge(inStage.Select(e => (e.QueuedAt, e.CompletedAt ?? asOf)));
+            var completed = terminal || (!open && stage < reached);
+            var intervals = Merge(inStage.Select(e => (e.QueuedAt, e.CompletedAt ?? end)));
 
             return new StageSpan(
                 stage,
                 completed ? StageState.Completed : StageState.InProgress,
                 inStage.Min(e => e.QueuedAt),
-                completed ? inStage.Max(e => e.CompletedAt) : null,
+                completed ? (open ? end : inStage.Max(e => e.CompletedAt)) : null,
                 intervals.Sum(i => calendar.WorkingMinutes(i.Start, i.End, line.SiteId)),
                 intervals.Sum(i => (i.End - i.Start).TotalDays));
         }).ToList();
@@ -64,7 +66,6 @@ public static class JourneyBuilder
         if (events.Count > 0)
         {
             var start = events.Min(e => e.QueuedAt);
-            var end = terminal ? events.Max(e => e.CompletedAt) ?? asOf : asOf;
             totalMinutes = calendar.WorkingMinutes(start, end, line.SiteId);
             totalDays = Math.Max(0, (end - start).TotalDays);
         }

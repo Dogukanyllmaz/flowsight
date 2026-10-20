@@ -79,7 +79,8 @@ public static class DemoExporter
         {
             var stats = period.Id == Periods.Last12Id ? baseline : StageStatistics.Compute(lines, period, calendar);
             Write(Path.Combine(overviewDir, $"{period.Id}.json"),
-                OwnerViews.Overview(period, stats, Bottlenecks.Rank(stats, baseline), calendar.MinutesPerDay));
+                // last12 is the baseline itself, so it gets no pace comparison rather than a meaningless "normal".
+                OwnerViews.Overview(period, stats, Bottlenecks.Rank(stats, period.Id == Periods.Last12Id ? [] : baseline), calendar.MinutesPerDay));
 
             var periodDir = Directory.CreateDirectory(Path.Combine(stagesDir, period.Id)).FullName;
             foreach (var stage in Stages.All)

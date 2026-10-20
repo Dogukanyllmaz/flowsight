@@ -94,6 +94,20 @@ public class JourneyBuilderTests
     }
 
     [Fact]
+    public void CancelledLine_ClosesStagesThatStillHadOpenSteps()
+    {
+        var j = BuildOne("2026-10-30T12:00+03:00",
+            Ev(Stage.Purchasing, "2026-10-19T08:00+03:00", null),                                          // parallel step never finished
+            Ev(Stage.Purchasing, "2026-10-19T08:00+03:00", "2026-10-20T08:00+03:00", StepOutcome.Cancelled));
+
+        var purchasing = Span(j, Stage.Purchasing);
+        Assert.Equal(LineStatus.Cancelled, j.Status);
+        Assert.Equal(StageState.Completed, purchasing.State);
+        Assert.Equal(T("2026-10-20T08:00+03:00"), purchasing.LeftAt);
+        Assert.Equal(540, purchasing.WorkingMinutes);
+    }
+
+    [Fact]
     public void LineWithoutEvents_IsOpenAndNotStarted()
     {
         var j = BuildOne("2026-10-19T12:00+03:00");

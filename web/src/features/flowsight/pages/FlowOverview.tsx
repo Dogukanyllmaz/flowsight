@@ -116,6 +116,7 @@ export function FlowOverview({ periodId, onPeriodChange }: { periodId: string; o
                   <th scope="col">{t('colStage')}</th>
                   <th scope="col">{t('colShare')}</th>
                   <th scope="col">{t('colMedian')}</th>
+                  <th scope="col">{t('colMedianInclOpen')}</th>
                   <th scope="col">{t('colP90')}</th>
                   <th scope="col">{t('colWip')}</th>
                   <th scope="col">{t('colGrowth')}</th>
@@ -133,6 +134,7 @@ export function FlowOverview({ periodId, onPeriodChange }: { periodId: string; o
                       </th>
                       <td>{s.sharePercent}%</td>
                       <td>{days(s.medianDays)}</td>
+                      <td>{days(s.medianInclOpenDays)}</td>
                       <td>{days(s.p90Days)}</td>
                       <td>{s.wipEnd}</td>
                       <td>{growth > 0 ? `+${growth}` : growth < 0 ? `−${-growth}` : '0'}</td>

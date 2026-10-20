@@ -63,6 +63,12 @@ public class OwnerExportTests
     }
 
     [Fact]
+    public void Last12_HasNoPaceComparisonWithItself()
+    {
+        Assert.All(Read<OverviewView>(Owner("overview", "last12.json")).Stages, s => Assert.Equal("unknown", s.Pace));
+    }
+
+    [Fact]
     public void OwnerExport_IsDeterministic()
     {
         Assert.Equal(Hashes(Owner()), Hashes(Path.Combine(Run(), "owner")));
