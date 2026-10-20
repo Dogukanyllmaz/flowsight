@@ -195,3 +195,15 @@ a:focus-visible .fs-bar rect { stroke: var(--fs-accent); stroke-width: 2px; }
 .fs-table-wrap { overflow-x: auto; }
 
 .fs-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.fs-back { display: inline-block; margin-bottom: 8px; color: var(--fs-accent); text-decoration: none; }
+.fs-back:hover { text-decoration: underline; }
+h2.fs-chart-title { font-size: 1rem; margin: 0 0 8px; }
+.fs-split { display: flex; height: 28px; border-radius: 6px; overflow: hidden; gap: 2px; margin: 4px 0 10px; }
+.fs-split span { min-width: 4px; }
+.fs-split-queue { background: var(--fs-series-2); }
+.fs-split-work { background: var(--fs-series-1); }
+.fs-mix { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.fs-mix strong { font-size: 1.2rem; }
+.fs-hint { margin: 12px 0 0; padding: 10px 12px; border-left: 4px solid var(--fs-pace-slower); background: var(--fs-bg); border-radius: 0 6px 6px 0; }
+.fs-caption-note { display: block; font-weight: 400; font-size: 0.85rem; color: var(--fs-muted); margin-top: 2px; }

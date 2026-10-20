@@ -3,6 +3,7 @@ import { FlowSightProvider } from './features/flowsight/data/hooks'
 import { createStaticSource } from './features/flowsight/data/staticSource'
 import { AppShell } from './features/flowsight/pages/AppShell'
 import { FlowOverview } from './features/flowsight/pages/FlowOverview'
+import { StageDetail } from './features/flowsight/pages/StageDetail'
 import { useRoute } from './routing'
 
 const queryClient = new QueryClient()
@@ -17,7 +18,7 @@ export default function App() {
             r.page === 'flow' ? (
               <FlowOverview periodId={r.periodId} onPeriodChange={(periodId) => navigate({ page: 'flow', periodId })} />
             ) : (
-              <div className="fs-page">{r.page} · {r.periodId}</div>
+              <StageDetail periodId={r.periodId} stage={r.stage} />
             )
           } />
       </FlowSightProvider>
