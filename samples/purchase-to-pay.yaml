@@ -1,0 +1,125 @@
+# Demo purchase-to-pay process map (invented). Superset of the process-mapping-toolkit format:
+# FlowSight adds `stage`, assignee types `group-queue` / `field-routed`, `return_to`, `schedule` and dated `changes`.
+code: P2P
+name: Purchase to pay
+default_sla_hours: 8
+lanes: [Requester, IT, Line management, Procurement, Warehouse, Finance, Treasury]
+
+steps:
+  - {id: start, name: Request opened, type: start, lane: Requester, next: create-request}
+
+  - id: create-request
+    name: Create request
+    type: task
+    lane: Requester
+    stage: request
+    assignee: {type: initiator}
+    sla_hours: 24
+    next: [it-approval, line-manager-approval]
+
+  - id: it-approval
+    name: IT approval
+    type: approval
+    lane: IT
+    stage: approval
+    assignee: {type: role, value: IT manager}
+    sla_hours: 16
+    escalation: true
+    next: line-manager-approval
+
+  - id: line-manager-approval
+    name: Line manager approval
+    type: approval
+    lane: Line management
+    stage: approval
+    assignee: {type: manager_of, value: requester}
+    sla_hours: 16
+    escalation: true
+    next: [budget-owner-approval, sourcing]
+
+  - id: budget-owner-approval
+    name: Budget owner approval
+    type: approval
+    lane: Line management
+    stage: approval
+    assignee: {type: role, value: Budget owner}
+    sla_hours: 16
+    escalation: true
+    next: sourcing
+
+  - id: sourcing
+    name: Sourcing and quotes
+    type: task
+    lane: Procurement
+    stage: purchasing
+    assignee: {type: role, value: Buyer}
+    sla_hours: 40
+    escalation: true
+    return_to: clarify-spec
+    next: create-order
+
+  - id: clarify-spec
+    name: Clarify specification
+    type: task
+    lane: Requester
+    stage: purchasing
+    assignee: {type: initiator}
+    sla_hours: 24
+    next: sourcing
+
+  - id: create-order
+    name: Create purchase order
+    type: task
+    lane: Procurement
+    stage: order
+    assignee: {type: role, value: Buyer}
+    sla_hours: 8
+    escalation: true
+    next: [goods-receipt, service-acceptance]
+
+  - id: goods-receipt
+    name: Goods receipt
+    type: task
+    lane: Warehouse
+    stage: goods_receipt
+    assignee: {type: role, value: Warehouse clerk}
+    sla_hours: 16
+    escalation: true
+    next: invoice-matching
+
+  - id: service-acceptance
+    name: Service acceptance
+    type: task
+    lane: Requester
+    stage: goods_receipt
+    assignee: {type: initiator}
+    sla_hours: 24
+    next: invoice-matching
+
+  - id: invoice-matching
+    name: Invoice matching
+    type: task
+    lane: Finance
+    stage: invoice
+    assignee: {type: field-routed, value: site}
+    sla_hours: 16
+    escalation: true
+    next: payment-run
+
+  - id: payment-run
+    name: Payment run
+    type: task
+    lane: Treasury
+    stage: payment
+    assignee: {type: person, value: site treasurer}
+    schedule: weekly:friday
+    next: end
+
+  - {id: end, name: Paid, type: end, lane: Treasury}
+
+changes:
+  - date: 2026-06-03
+    step: invoice-matching
+    description: Invoices are routed to the site's clerk instead of a queue shared by all clerks.
+    before:
+      assignee: {type: group-queue, value: accounts payable}
