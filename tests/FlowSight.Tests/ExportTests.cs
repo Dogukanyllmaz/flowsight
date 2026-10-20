@@ -45,6 +45,24 @@ public class ExportTests
     }
 
     [Fact]
+    public void RequestReasons_DropUnknownWhenARealReasonExists()
+    {
+        var l1 = Line("L1", LineStatus.Open, Stage.Order);
+        var l2 = Line("L2", LineStatus.Open, Stage.Payment);
+        var none = new Dictionary<string, string>();
+        var reasons = new Dictionary<(string, string), IReadOnlyList<FlowSight.Core.Reasons.WaitingReason>>
+        {
+            [("R1", "L1")] = [new("unknown", none)],
+            [("R1", "L2")] = [new("waitingForBatch", new Dictionary<string, string> { ["day"] = "friday" })],
+        };
+
+        var view = RequestViewBuilder.Build(RequestAggregator.Build([l1, l2]).Single(), [l1, l2], 540, AsOf, reasons);
+
+        Assert.Equal(["waitingForBatch"], view.WaitingReasons.Select(r => r.Code));
+        Assert.Equal(["unknown"], view.Lines[0].WaitingReasons.Select(r => r.Code));
+    }
+
+    [Fact]
     public void RequestView_UsesCamelCaseAndStringEnums()
     {
         var json = JsonSerializer.Serialize(ViewOf(Line("L1", LineStatus.Open, Stage.GoodsReceipt)), JsonDefaults.Options);

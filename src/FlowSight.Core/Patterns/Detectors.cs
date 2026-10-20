@@ -91,9 +91,12 @@ internal static class Detectors
         var queuePresent = Percentiles.Median(present.Select(c.Queue).OfType<double>().ToList());
         if (queueAbsent is null || queuePresent is not > 0 || queueAbsent < AbsenceFactor * queuePresent) return;
 
+        // Absence days without a stand-in that fall inside the period.
+        var first = DateOnly.FromDateTime(c.Period.Start.DateTime);
+        var last = DateOnly.FromDateTime(c.Period.End.AddTicks(-1).DateTime);
         var days = uncovered
             .Where(a => absent.Any(e => e.ActorId == a.ActorId))
-            .Sum(a => a.To.DayNumber - a.From.DayNumber + 1);
+            .Sum(a => Math.Max(0, Math.Min(a.To.DayNumber, last.DayNumber) - Math.Max(a.From.DayNumber, first.DayNumber) + 1));
 
         cards.Add(Card(PatternCodes.SinglePointOfFailure, step, absent, null, $"assignee: {step.Assignee.Type}", AssignToRoleWithDelegation,
             queueAbsent - queuePresent, Lines(absent),
@@ -136,9 +139,12 @@ internal static class Detectors
         var with = Percentiles.Median(best.Returned.Select(g => Span(g.Key)).ToList())!.Value;
         var without = Percentiles.Median(best.Lines.Where(g => !returnedKeys.Contains(g.Key)).Select(g => Span(g.Key)).ToList());
 
+        // Evidence that cannot be computed is left out rather than shown as zero.
+        Evidence[] evidence = without is null
+            ? [Ev("returnedShare", best.Share), Ev("medianWithRework", with)]
+            : [Ev("returnedShare", best.Share), Ev("medianWithRework", with), Ev("medianWithoutRework", without.Value)];
         cards.Add(Card(PatternCodes.ReworkLoop, step, best.Returned.SelectMany(g => g).ToList(), best.Segment, $"return_to: {step.ReturnTo}", ValidateAtEntry,
-            without is null ? null : with - without.Value, best.Returned.Count,
-            Ev("returnedShare", best.Share), Ev("medianWithRework", with), Ev("medianWithoutRework", without ?? 0)));
+            without is null ? null : with - without.Value, best.Returned.Count, evidence));
     }
 
     public static void BatchWaiting(DetectionContext c, MapStep step, List<StepEvent> events, List<ImprovementCard> cards)
@@ -156,10 +162,10 @@ internal static class Detectors
         var afterPickUp = Percentiles.Median(events.Where(e => e.StartedAt is not null)
             .Select(e => c.Minutes(e, e.StartedAt!.Value, e.CompletedAt!.Value)).ToList());
 
+        var weekday = new Evidence("weekdayShare", new Dictionary<string, double> { ["value"] = Math.Round(share, 3), ["weekday"] = (int)top.Key });
         cards.Add(Card(PatternCodes.BatchWaiting, step, events, null, $"schedule: weekly:{step.WeeklyOn.Value.ToString().ToLowerInvariant()}, no SLA",
             DailyProcessingWithSla, afterPickUp, Lines(events),
-            new Evidence("weekdayShare", new Dictionary<string, double> { ["value"] = share, ["weekday"] = (int)top.Key }),
-            Ev("medianAfterPickUp", afterPickUp ?? 0)));
+            afterPickUp is null ? [weekday] : [weekday, Ev("medianAfterPickUp", afterPickUp.Value)]));
     }
 
     public static void ExceptionQueue(DetectionContext c, MapStep step, List<StepEvent> events, List<ImprovementCard> cards, List<string> insufficient)

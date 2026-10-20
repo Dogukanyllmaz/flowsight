@@ -58,6 +58,8 @@ public class PatternTests
     {
         var card = Detect(month).Cards.Single(c => c.Id == "singlePointOfFailure:payment-run");
         Assert.Equal("assignToRoleWithDelegation", card.ProposedChange);
+        // One 19-day window falls in each of these months.
+        Assert.Equal(19, card.Evidence.Single(e => e.Code == "absenceDays").Values["value"]);
     }
 
     [Fact]
@@ -89,6 +91,30 @@ public class PatternTests
     {
         var card = Detect("2026-09").Cards.Single(c => c.Id == "exceptionQueue:invoice-matching");
         Assert.Equal("toleranceRulesUpstream", card.ProposedChange);
+    }
+
+    [Fact]
+    public void ChangeOnTheFirstOfNextMonth_DoesNotApplyToThisMonth()
+    {
+        var yaml = ProcessMapTests.SampleYaml().Replace("date: 2026-06-03", "date: 2026-04-01");
+        var map = FlowSight.Core.ProcessMaps.ProcessMapYaml.Parse(yaml);
+        var (log, lines, periods) = Data.Value;
+
+        var march = PatternLibrary.Detect(log, lines, map, periods.Single(p => p.Id == "2026-03"), Calendar);
+
+        Assert.Contains("sharedQueueSearch:invoice-matching", Ids(march));
+    }
+
+    [Fact]
+    public void UncomputableEvidence_IsLeftOutNotZero()
+    {
+        var log = Data.Value.Log;
+        var noStarts = log with { Events = log.Events.Select(e => e.Stage == Stage.Payment ? e with { StartedAt = null } : e).ToList() };
+
+        var card = Detect("2026-03", noStarts).Cards.Single(c => c.Id == "batchWaiting:payment-run");
+
+        Assert.DoesNotContain(card.Evidence, e => e.Code == "medianAfterPickUp");
+        Assert.Null(card.ExpectedSavingMinutesPerLine);
     }
 
     [Fact]

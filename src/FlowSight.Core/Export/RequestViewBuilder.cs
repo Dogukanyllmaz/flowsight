@@ -56,7 +56,13 @@ public static class RequestViewBuilder
                 line.Stages.Select(s => View(s, line)).ToList(),
                 ReasonsOf(line))).ToList(),
             asOf,
-            // Request level: every distinct reason of its open lines, in first-seen order.
-            request.Lines.Where(l => l.Status == LineStatus.Open).SelectMany(ReasonsOf).DistinctBy(r => r.Code).ToList());
+            RequestReasons(request.Lines.Where(l => l.Status == LineStatus.Open).SelectMany(ReasonsOf)));
+    }
+
+    /// <summary>Every distinct reason of the request's open lines, in first-seen order; "unknown" only when nothing else is known.</summary>
+    private static IReadOnlyList<WaitingReasonView> RequestReasons(IEnumerable<WaitingReasonView> reasons)
+    {
+        var distinct = reasons.DistinctBy(r => r.Code).ToList();
+        return distinct.Any(r => r.Code != WaitingReasons.Unknown) ? distinct.Where(r => r.Code != WaitingReasons.Unknown).ToList() : distinct;
     }
 }

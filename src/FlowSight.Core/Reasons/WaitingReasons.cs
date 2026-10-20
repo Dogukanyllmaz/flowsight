@@ -83,7 +83,9 @@ public sealed class WaitingReasonEvaluator
         }
 
         if (open?.Assignment == AssignmentKind.GroupQueue)
-            reasons.Add(Reason(WaitingReasons.SharedQueue, ("candidates", open.CandidateCount?.ToString(Invariant) ?? "")));
+            reasons.Add(open.CandidateCount is { } people
+                ? Reason(WaitingReasons.SharedQueue, ("candidates", people.ToString(Invariant)))
+                : Reason(WaitingReasons.SharedQueue));
 
         if (open is not null && _map.StepForActivity(open.Activity)?.WeeklyOn is { } day)
             reasons.Add(Reason(WaitingReasons.WaitingForBatch, ("day", day.ToString().ToLowerInvariant())));

@@ -128,6 +128,17 @@ public class WaitingReasonTests
     }
 
     [Fact]
+    public void SharedQueue_WithoutQueueSize_HasNoCandidatesParam()
+    {
+        var reasons = Reasons(With(Ev(Stage.Invoice, "Invoice matching", "2026-10-19T13:00+03:00", null,
+            assignment: AssignmentKind.GroupQueue)));
+
+        var queue = Assert.Single(reasons);
+        Assert.Equal("sharedQueue", queue.Code);
+        Assert.False(queue.Params.ContainsKey("candidates"));
+    }
+
+    [Fact]
     public void WaitingForBatch()
     {
         var reasons = Reasons(With(

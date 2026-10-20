@@ -104,6 +104,14 @@ describe('RequestTracker', () => {
     expect(screen.getByText('Ödemeler haftada bir, Cuma günü yapılıyor.')).toBeInTheDocument()
   })
 
+  it('describes a shared queue of unknown size without a number', async () => {
+    const reasons = [{ code: 'sharedQueue', params: {} }] as const
+    renderWithSource(<RequestTracker />, memorySource([{ ...fixtureRequest, waitingReasons: [...reasons] }]))
+    await search('PR-001783')
+
+    expect(await screen.findByText('It is in a shared queue; someone in the group will pick it up.')).toBeInTheDocument()
+  })
+
   it('formats every reason code', async () => {
     const reasons = [
       { code: 'assigneeAbsent', params: { untilDate: '2026-10-30' } },

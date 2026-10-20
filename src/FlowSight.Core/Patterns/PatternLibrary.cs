@@ -14,7 +14,8 @@ public static class PatternLibrary
 
     public static PatternResult Detect(EventLog log, IReadOnlyList<LineJourney> lines, ProcessMap map, Period period, IWorkCalendar calendar)
     {
-        var context = new DetectionContext(JourneyBuilder.ApplyCutOff(log), lines, map.AsOf(period.End), period, calendar);
+        // Period.End is exclusive: judge the period with the map as it was on its last day.
+        var context = new DetectionContext(JourneyBuilder.ApplyCutOff(log), lines, map.AsOf(period.End.AddTicks(-1)), period, calendar);
         var cards = new List<ImprovementCard>();
         var insufficient = new List<string>();
 

@@ -22,7 +22,7 @@ export function WaitingReasons({ reasons }: { reasons: WaitingReasonView[] }) {
       case 'partialDelivery':
         return t('reason.partialDelivery', { received: num('received'), ordered: num('ordered') })
       case 'sharedQueue':
-        return t('reason.sharedQueue', { candidates: num('candidates') })
+        return p.candidates ? t('reason.sharedQueue', { candidates: num('candidates') }) : t('reason.sharedQueueUnknownSize')
       case 'waitingForBatch': {
         const day = (days as readonly string[]).includes(p.day) ? t(`day.${p.day}` as StringKey) : p.day
         return t('reason.waitingForBatch', { day })
