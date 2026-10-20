@@ -9,6 +9,22 @@ export type StageName = z.infer<typeof stageName>
 
 const status = z.enum(['open', 'completed', 'rejected', 'cancelled'])
 
+export const waitingReasonCodes = [
+  'assigneeAbsent',
+  'returnedForCorrection',
+  'priceVariance',
+  'partialDelivery',
+  'sharedQueue',
+  'waitingForBatch',
+  'unknown',
+] as const
+
+export const waitingReasonSchema = z.object({
+  code: z.enum(waitingReasonCodes),
+  params: z.record(z.string(), z.string()),
+})
+export type WaitingReasonView = z.infer<typeof waitingReasonSchema>
+
 export const stageViewSchema = z.object({
   stage: stageName,
   state: z.enum(['notStarted', 'inProgress', 'completed']),
@@ -26,6 +42,7 @@ export const lineViewSchema = z.object({
   status,
   currentStage: stageName.nullable(),
   stages: z.array(stageViewSchema).length(7),
+  waitingReasons: z.array(waitingReasonSchema),
 })
 
 export const requestViewSchema = z.object({
@@ -37,6 +54,7 @@ export const requestViewSchema = z.object({
   stages: z.array(stageViewSchema).length(7),
   lines: z.array(lineViewSchema),
   asOf: z.string(),
+  waitingReasons: z.array(waitingReasonSchema),
 })
 
 export const requestIndexSchema = z.array(

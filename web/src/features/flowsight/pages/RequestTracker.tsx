@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { StageStrip } from '../components/StageStrip'
+import { WaitingReasons } from '../components/WaitingReasons'
 import { useRequest, useRequestIndex } from '../data/hooks'
 import type { RequestView } from '../data/schemas'
 import { I18nProvider, LanguageToggle, useStrings } from '../i18n/I18n'
@@ -125,6 +126,7 @@ function RequestCard({ request }: { request: RequestView }) {
       </p>
 
       <StageStrip stages={request.stages} currentStage={request.currentStage} label={request.caseId} />
+      {request.status === 'open' && <WaitingReasons reasons={request.waitingReasons} />}
 
       <p className="fs-muted">
         {t('total', { days: request.totalWorkingDays })}

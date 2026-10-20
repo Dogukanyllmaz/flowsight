@@ -207,3 +207,7 @@ h2.fs-chart-title { font-size: 1rem; margin: 0 0 8px; }
 .fs-mix strong { font-size: 1.2rem; }
 .fs-hint { margin: 12px 0 0; padding: 10px 12px; border-left: 4px solid var(--fs-pace-slower); background: var(--fs-bg); border-radius: 0 6px 6px 0; }
 .fs-caption-note { display: block; font-weight: 400; font-size: 0.85rem; color: var(--fs-muted); margin-top: 2px; }
+
+.fs-reasons { margin: 4px 0 12px; padding: 10px 14px; border-left: 4px solid var(--fs-accent); background: var(--fs-bg); border-radius: 0 8px 8px 0; }
+.fs-reasons h3 { margin: 0 0 4px; font-size: 0.95rem; }
+.fs-reasons ul { margin: 0; padding-left: 18px; }

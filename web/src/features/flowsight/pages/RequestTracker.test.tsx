@@ -77,4 +77,50 @@ describe('RequestTracker', () => {
 
     expect(await screen.findByRole('button', { name: 'PR-001783' })).toBeInTheDocument()
   })
+
+  it('shows why an open request is waiting', async () => {
+    renderWithSource(<RequestTracker />)
+    await search('PR-001783')
+
+    expect(await screen.findByText('Payments are made once a week, on Friday.')).toBeInTheDocument()
+  })
+
+  it('shows no reasons for a completed request', async () => {
+    const closed = { ...fixtureRequest, status: 'completed' as const, currentStage: null, waitingReasons: [] }
+    renderWithSource(<RequestTracker />, memorySource([closed]))
+    await search('PR-001783')
+
+    await screen.findByRole('heading', { name: /PR-001783/ })
+    expect(screen.queryByRole('heading', { name: 'Why is it waiting?' })).not.toBeInTheDocument()
+  })
+
+  it('localises the reason in Turkish', async () => {
+    renderWithSource(<RequestTracker />)
+    const user = await search('PR-001783')
+    await screen.findByRole('heading', { name: /PR-001783/ })
+
+    await user.click(screen.getByRole('button', { name: 'TR' }))
+
+    expect(screen.getByText('Ödemeler haftada bir, Cuma günü yapılıyor.')).toBeInTheDocument()
+  })
+
+  it('formats every reason code', async () => {
+    const reasons = [
+      { code: 'assigneeAbsent', params: { untilDate: '2026-10-30' } },
+      { code: 'returnedForCorrection', params: {} },
+      { code: 'priceVariance', params: { percent: '-4.5' } },
+      { code: 'partialDelivery', params: { received: '6', ordered: '10' } },
+      { code: 'sharedQueue', params: { candidates: '6' } },
+      { code: 'unknown', params: {} },
+    ] as const
+    renderWithSource(<RequestTracker />, memorySource([{ ...fixtureRequest, waitingReasons: [...reasons] }]))
+    await search('PR-001783')
+
+    expect(await screen.findByText(/away until 30\/10\/2026/)).toBeInTheDocument()
+    expect(screen.getByText('It was returned for a correction.')).toBeInTheDocument()
+    expect(screen.getByText(/differs from the order by -4.5%/)).toBeInTheDocument()
+    expect(screen.getByText('Only 6 of 10 have been delivered so far.')).toBeInTheDocument()
+    expect(screen.getByText(/shared queue with 6 people/)).toBeInTheDocument()
+    expect(screen.getByText('No specific reason recorded.')).toBeInTheDocument()
+  })
 })
