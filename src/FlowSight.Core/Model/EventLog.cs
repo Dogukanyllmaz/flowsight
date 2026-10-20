@@ -37,8 +37,26 @@ public sealed record RequestLine(
     decimal Amount,
     string Currency);
 
-/// <summary>Everything known about the requests up to <paramref name="AsOf"/>.</summary>
+public enum DocumentType { Order, Receipt, Invoice }
+
+/// <summary>An ERP document linked to a request line: what was ordered, received or invoiced, and when it arrived.</summary>
+public sealed record DocumentLink(
+    string CaseId,
+    string LineId,
+    DocumentType Type,
+    string DocumentId,
+    decimal Quantity,
+    decimal Amount,
+    DateTimeOffset At);
+
+/// <summary>A planned absence (inclusive dates) and who stands in, if anyone.</summary>
+public sealed record Absence(string ActorId, DateOnly From, DateOnly To, string? DelegateId);
+
+/// <summary>Everything known about the requests up to <paramref name="AsOf"/>.
+/// Document links and absences are optional; analyses that need them report "insufficient data" without them.</summary>
 public sealed record EventLog(
     IReadOnlyList<RequestLine> Lines,
     IReadOnlyList<StepEvent> Events,
-    DateTimeOffset AsOf);
+    DateTimeOffset AsOf,
+    IReadOnlyList<DocumentLink>? Links = null,
+    IReadOnlyList<Absence>? Absences = null);

@@ -29,7 +29,8 @@ public static class JourneyBuilder
                     CompletedAt = e.CompletedAt > log.AsOf ? null : e.CompletedAt,
                     Outcome = e.CompletedAt > log.AsOf ? null : e.Outcome
                 })
-                .ToList()
+                .ToList(),
+            Links = log.Links?.Where(l => l.At <= log.AsOf).ToList()
         };
 
     private static LineJourney BuildLine(RequestLine line, List<StepEvent> events, DateTimeOffset asOf, IWorkCalendar calendar)

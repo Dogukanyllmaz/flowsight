@@ -27,12 +27,13 @@ internal static class Catalog
     public const string WarehouseClerk = "Warehouse clerk";
     public const string AccountsPayable = "Accounts payable";
     public const string Treasury = "Treasury";
+    public const string ItManager = "IT manager";
 
     /// <summary>People per role at each site.</summary>
     private static readonly (string Role, int PerSite)[] Staffing =
     [
         (Requester, 8), (LineManager, 3), (BudgetOwner, 1), (Buyer, 2),
-        (WarehouseClerk, 2), (AccountsPayable, 2), (Treasury, 1)
+        (WarehouseClerk, 2), (AccountsPayable, 2), (Treasury, 1), (ItManager, 1)
     ];
 
     /// <summary>Pseudonymous actors <c>A-01</c>… grouped by (site, role), in a fixed order.</summary>
@@ -62,7 +63,33 @@ internal static class Catalog
 
     /// <summary>The clerk an invoice is routed to after the change.</summary>
     public static string RoutedClerk(string site) => Actors[(site, AccountsPayable)][0];
-    public static readonly StepTemplate PaymentRun = new(Stage.Payment, "Payment run", Treasury, AssignmentKind.Role, 2_700, 0.95);
+    public static readonly StepTemplate PaymentRun = new(Stage.Payment, "Payment run", Treasury, AssignmentKind.Person, 1_200, 0.9);
+
+    // M3 scenarios (ground truth for the pattern tests).
+    /// <summary>Requests with an IT hardware line pass three approvals in a row.</summary>
+    public static readonly StepTemplate ItApproval = new(Stage.Approval, "IT approval", ItManager, AssignmentKind.Role, 300, 0.8);
+    /// <summary>Returned maintenance-service lines go back to the requester for a clearer specification.</summary>
+    public static readonly StepTemplate ClarifySpecification = new(Stage.Purchasing, "Clarify specification", Requester, AssignmentKind.Person, 600, 0.5);
+
+    public const string ItCategory = "IT hardware";
+    public const string ReworkCategory = "Maintenance service";
+    public const double ReturnRate = 0.2;
+    public const double PriceVarianceRate = 0.10;
+    public const double ExceptionMedianMinutes = 1_500;
+    public const double PartialDeliveryRate = 0.08;
+    public const double BackorderMedianMinutes = 2_000;
+    /// <summary>Payments complete only in the weekly run, on Fridays at 16:00.</summary>
+    public static readonly TimeOnly PaymentRunTime = new(16, 0);
+
+    public static string Treasurer(string site) => Actors[(site, Treasury)][0];
+
+    /// <summary>Site East's treasurer is away twice with nobody standing in; Site North's has a stand-in.</summary>
+    public static readonly Absence[] Absences =
+    [
+        new(Treasurer("Site East"), new DateOnly(2026, 2, 2), new DateOnly(2026, 2, 20), null),
+        new(Treasurer("Site East"), new DateOnly(2026, 8, 3), new DateOnly(2026, 8, 21), null),
+        new(Treasurer("Site North"), new DateOnly(2026, 4, 6), new DateOnly(2026, 4, 17), Treasurer("Site South"))
+    ];
 
     /// <summary>Spread of step durations around their median (log-normal sigma).</summary>
     public const double DurationSigma = 0.6;
