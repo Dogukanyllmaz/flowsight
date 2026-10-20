@@ -108,6 +108,16 @@ public class WaitingReasonTests
     }
 
     [Fact]
+    public void NothingReceivedYet_IsNotAPartialDelivery()
+    {
+        var reasons = Reasons(
+            [.. UpToInvoice[..4], Ev(Stage.GoodsReceipt, "Goods receipt", "2026-10-19T12:00+03:00", null)],
+            links: [Link(DocumentType.Order, 10, 100)]);
+
+        Assert.Equal(["unknown"], reasons.Select(r => r.Code));
+    }
+
+    [Fact]
     public void SharedQueue_ReportsCandidates()
     {
         var reasons = Reasons(With(Ev(Stage.Invoice, "Invoice matching", "2026-10-19T13:00+03:00", null,

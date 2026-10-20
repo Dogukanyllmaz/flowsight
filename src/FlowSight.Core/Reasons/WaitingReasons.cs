@@ -77,7 +77,7 @@ public sealed class WaitingReasonEvaluator
         if (stage is Stage.GoodsReceipt or Stage.Invoice && order is not null)
         {
             var received = links.Where(l => l.Type == DocumentType.Receipt).Sum(l => l.Quantity);
-            if (received < order.Quantity)
+            if (received > 0 && received < order.Quantity)
                 reasons.Add(Reason(WaitingReasons.PartialDelivery,
                     ("received", received.ToString("0.##", Invariant)), ("ordered", order.Quantity.ToString("0.##", Invariant))));
         }
