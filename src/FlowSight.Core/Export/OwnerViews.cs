@@ -1,4 +1,5 @@
 using FlowSight.Core.Journeys;
+using FlowSight.Core.Patterns;
 using FlowSight.Core.Statistics;
 using static FlowSight.Core.Export.JsonDefaults;
 
@@ -43,8 +44,37 @@ public sealed record StageDetailView(
     IReadOnlyList<SlowCaseView> SlowestOpen,
     IReadOnlyList<SlowCaseView> SlowestCompleted);
 
+public sealed record EvidenceView(string Code, IReadOnlyDictionary<string, double> Values);
+
+/// <param name="ExpectedSavingDaysPerLine">Working days the symptom adds per affected line; null when not estimable.</param>
+public sealed record CardView(
+    string Id,
+    string Pattern,
+    string Stage,
+    string StepId,
+    string StepName,
+    string? Segment,
+    string MapProperty,
+    IReadOnlyList<EvidenceView> Evidence,
+    string ProposedChange,
+    double? ExpectedSavingDaysPerLine,
+    int AffectedLines,
+    double? ExpectedSavingDaysTotal);
+
+public sealed record CardsView(string PeriodId, IReadOnlyList<CardView> Cards, IReadOnlyList<string> InsufficientData, IReadOnlyList<string> UnmappedActivities);
+
 public static class OwnerViews
 {
+    public static CardsView Cards(Period period, PatternResult result, int minutesPerDay) =>
+        new(period.Id, result.Cards.Select(c => new CardView(
+                c.Id, c.Pattern, Name(c.Stage), c.StepId, c.StepName, c.Segment, c.MapProperty,
+                c.Evidence.Select(e => new EvidenceView(e.Code, e.Values)).ToList(),
+                c.ProposedChange,
+                Days(c.ExpectedSavingMinutesPerLine, minutesPerDay),
+                c.AffectedLines,
+                c.ExpectedSavingMinutesPerLine is { } m ? Days(m * c.AffectedLines, minutesPerDay) : null)).ToList(),
+            result.InsufficientData, result.UnmappedActivities);
+
     public static PeriodsView Periods(IReadOnlyList<Period> periods, IReadOnlyList<LineJourney> lines, int minutesPerDay)
     {
         var paid = lines.Where(l => l.Status == LineStatus.Completed).ToList();

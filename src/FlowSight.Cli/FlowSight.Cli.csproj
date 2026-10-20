@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\FlowSight.Core\FlowSight.Core.csproj" />
@@ -11,5 +11,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\samples\purchase-to-pay.yaml" LogicalName="purchase-to-pay.yaml" />
+  </ItemGroup>
 
 </Project>

@@ -4,6 +4,9 @@ using FlowSight.Core.Calendar;
 using FlowSight.Core.Export;
 using FlowSight.Core.Journeys;
 using FlowSight.Core.Model;
+using FlowSight.Core.Patterns;
+using FlowSight.Core.ProcessMaps;
+using FlowSight.Core.Reasons;
 using FlowSight.Core.Statistics;
 using FlowSight.Synthetic;
 
@@ -25,6 +28,15 @@ public static class DemoExporter
         return new WorkCalendar(CalendarRules.Default with { Holidays = holidays });
     }
 
+    /// <summary>The demo process map, embedded from <c>samples/purchase-to-pay.yaml</c>.</summary>
+    public static ProcessMap DemoMap()
+    {
+        using var stream = typeof(DemoExporter).Assembly.GetManifestResourceStream("purchase-to-pay.yaml")
+            ?? throw new InvalidOperationException("Embedded demo map is missing.");
+        using var reader = new StreamReader(stream);
+        return ProcessMapYaml.Parse(reader.ReadToEnd());
+    }
+
     public static void Run(string outDir, int seed, int requests)
     {
         var calendar = DemoCalendar();
@@ -42,11 +54,15 @@ public static class DemoExporter
         foreach (var stale in Directory.GetFiles(requestDir, "PR-*.json").Append(Path.Combine(requestDir, "index.json")))
             File.Delete(stale);
 
+        var map = DemoMap();
+        var evaluator = new WaitingReasonEvaluator(log, map);
+        var reasons = lines.ToDictionary(l => (l.Line.CaseId, l.Line.LineId), evaluator.For);
+
         foreach (var journey in journeys)
         {
             var peers = journey.Lines.SelectMany(l => groups[(l.Line.Path, l.Line.ItemCategory)]).Distinct().ToList();
             Write(Path.Combine(requestDir, $"{journey.CaseId}.json"),
-                RequestViewBuilder.Build(journey, peers, calendar.MinutesPerDay, log.AsOf));
+                RequestViewBuilder.Build(journey, peers, calendar.MinutesPerDay, log.AsOf, reasons));
         }
 
         Write(Path.Combine(requestDir, "index.json"), journeys
@@ -56,17 +72,19 @@ public static class DemoExporter
         Write(Path.Combine(outDir, "meta.json"), new DemoMeta(
             log.AsOf, seed, requests, calendar.MinutesPerDay, Stages.All.Select(JsonDefaults.Name).ToList()));
 
-        WriteOwner(Path.Combine(outDir, "owner"), log, lines, calendar);
+        WriteOwner(Path.Combine(outDir, "owner"), log, lines, calendar, map);
     }
 
     /// <summary>Process-owner statistics: periods and trend, one overview per period, one drill-down per period and stage.</summary>
-    private static void WriteOwner(string ownerDir, EventLog log, IReadOnlyList<LineJourney> lines, WorkCalendar calendar)
+    private static void WriteOwner(string ownerDir, EventLog log, IReadOnlyList<LineJourney> lines, WorkCalendar calendar, ProcessMap map)
     {
         var overviewDir = Directory.CreateDirectory(Path.Combine(ownerDir, "overview")).FullName;
+        var cardsDir = Directory.CreateDirectory(Path.Combine(ownerDir, "cards")).FullName;
         var stagesDir = Directory.CreateDirectory(Path.Combine(ownerDir, "stages")).FullName;
 
         // Remove only files this exporter writes.
         foreach (var stale in Directory.GetFiles(overviewDir, "*.json")
+                     .Concat(Directory.GetFiles(cardsDir, "*.json"))
                      .Concat(Directory.GetDirectories(stagesDir).SelectMany(d => Directory.GetFiles(d, "*.json")))
                      .Append(Path.Combine(ownerDir, "periods.json")))
             File.Delete(stale);
@@ -81,6 +99,9 @@ public static class DemoExporter
             Write(Path.Combine(overviewDir, $"{period.Id}.json"),
                 // last12 is the baseline itself, so it gets no pace comparison rather than a meaningless "normal".
                 OwnerViews.Overview(period, stats, Bottlenecks.Rank(stats, period.Id == Periods.Last12Id ? [] : baseline), calendar.MinutesPerDay));
+
+            Write(Path.Combine(cardsDir, $"{period.Id}.json"),
+                OwnerViews.Cards(period, PatternLibrary.Detect(log, lines, map, period, calendar), calendar.MinutesPerDay));
 
             var periodDir = Directory.CreateDirectory(Path.Combine(stagesDir, period.Id)).FullName;
             foreach (var stage in Stages.All)
