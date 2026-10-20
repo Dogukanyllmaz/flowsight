@@ -15,6 +15,7 @@ public static class Generator
         var periodStart = new DateTimeOffset(options.StartDate.ToDateTime(new TimeOnly(8, 0)), offset);
         var periodEnd = new DateTimeOffset(options.StartDate.AddMonths(options.Months).ToDateTime(new TimeOnly(8, 0)), offset);
         var asOf = options.AsOf ?? calendar.AddWorkingMinutes(periodEnd, 0);
+        var change = new DateTimeOffset(options.ChangeDate.ToDateTime(TimeOnly.MinValue), offset);
 
         var periodMinutes = calendar.WorkingMinutes(periodStart, periodEnd);
         var arrivals = Enumerable.Range(0, options.Requests)
@@ -27,14 +28,14 @@ public static class Generator
         var events = new List<StepEvent>();
         for (var i = 0; i < arrivals.Count; i++)
         {
-            var request = new RequestBuilder(random, calendar, asOf, $"PR-{i + 1:000000}", Sites[random.Next(Sites.Length)]);
+            var request = new RequestBuilder(random, calendar, asOf, change, $"PR-{i + 1:000000}", Sites[random.Next(Sites.Length)]);
             request.Build(arrivals[i], lines, events);
         }
 
         return new EventLog(lines, events, asOf);
     }
 
-    private sealed class RequestBuilder(Random random, IWorkCalendar calendar, DateTimeOffset asOf, string caseId, string site)
+    private sealed class RequestBuilder(Random random, IWorkCalendar calendar, DateTimeOffset asOf, DateTimeOffset change, string caseId, string site)
     {
         public void Build(DateTimeOffset arrival, List<RequestLine> lines, List<StepEvent> events)
         {
@@ -65,21 +66,29 @@ public static class Generator
                 if (rejected || !stillRunning) continue;
 
                 var t = time;
-                foreach (var step in LineChain(line))
+                foreach (var planned in LineChain(line))
                 {
+                    var (step, actor, candidates) = planned.Stage == Stage.Invoice
+                        ? InvoiceStep(t)
+                        : (planned, planned.Role == Requester ? requester : Pick(planned.Role), (int?)null);
                     var minutes = Duration(step);
                     var outcome = step.Stage == Stage.Purchasing && random.NextDouble() < CancellationRate
                         ? StepOutcome.Cancelled
                         : StepOutcome.Done;
-                    var actor = step.Role == Requester ? requester : Pick(step.Role);
-                    if (!Emit(events, line, step, actor, t, minutes, outcome) || outcome == StepOutcome.Cancelled) break;
+                    if (!Emit(events, line, step, actor, t, minutes, outcome, candidates) || outcome == StepOutcome.Cancelled) break;
                     t = calendar.AddWorkingMinutes(t, minutes, site);
                 }
             }
         }
 
         /// <summary>Adds one event, cut off at the as-of date. Returns false when the chain must stop here.</summary>
-        private bool Emit(List<StepEvent> events, RequestLine line, StepTemplate step, string actor, DateTimeOffset queued, double minutes, StepOutcome outcome)
+        /// <summary>Invoice handling before and after the injected routing change.</summary>
+        private (StepTemplate Step, string Actor, int? Candidates) InvoiceStep(DateTimeOffset queued) =>
+            queued < change
+                ? (SharedInvoiceQueue, AllClerks[random.Next(AllClerks.Length)], AllClerks.Length)
+                : (RoutedInvoice, RoutedClerk(site), 1);
+
+        private bool Emit(List<StepEvent> events, RequestLine line, StepTemplate step, string actor, DateTimeOffset queued, double minutes, StepOutcome outcome, int? candidates = null)
         {
             if (queued > asOf) return false;
             var started = calendar.AddWorkingMinutes(queued, Math.Round(minutes * step.QueueShare), site);
@@ -91,7 +100,8 @@ public static class Generator
                 queued,
                 started <= asOf ? started : null,
                 done ? completed : null,
-                done ? outcome : null));
+                done ? outcome : null,
+                candidates));
             return done;
         }
 
@@ -107,7 +117,7 @@ public static class Generator
             yield return Sourcing;
             yield return CreateOrder;
             yield return line.Path == LinePath.Goods ? GoodsReceipt : ServiceAcceptance;
-            yield return InvoiceMatching;
+            yield return SharedInvoiceQueue; // replaced by InvoiceStep at generation time
             yield return PaymentRun;
         }
 

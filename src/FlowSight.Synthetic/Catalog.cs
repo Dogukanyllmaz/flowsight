@@ -51,7 +51,17 @@ internal static class Catalog
     public static readonly StepTemplate CreateOrder = new(Stage.Order, "Create purchase order", Buyer, AssignmentKind.Role, 300, 0.7);
     public static readonly StepTemplate GoodsReceipt = new(Stage.GoodsReceipt, "Goods receipt", WarehouseClerk, AssignmentKind.Role, 4_000, 0.95);
     public static readonly StepTemplate ServiceAcceptance = new(Stage.GoodsReceipt, "Service acceptance", Requester, AssignmentKind.Person, 1_500, 0.9);
-    public static readonly StepTemplate InvoiceMatching = new(Stage.Invoice, "Invoice matching", AccountsPayable, AssignmentKind.Role, 1_200, 0.8);
+    // Injected scenario (ground truth for tests): until the change date every invoice lands in one queue shared by
+    // all accounts-payable clerks, who search it for their own site's invoices. Afterwards each invoice is routed
+    // straight to its site's clerk.
+    public static readonly StepTemplate SharedInvoiceQueue = new(Stage.Invoice, "Invoice matching", AccountsPayable, AssignmentKind.GroupQueue, 6_000, 0.9);
+    public static readonly StepTemplate RoutedInvoice = new(Stage.Invoice, "Invoice matching", AccountsPayable, AssignmentKind.FieldRouted, 900, 0.7);
+
+    /// <summary>Every accounts-payable clerk across all sites, in a fixed order.</summary>
+    public static readonly string[] AllClerks = Sites.SelectMany(site => Actors[(site, AccountsPayable)]).ToArray();
+
+    /// <summary>The clerk an invoice is routed to after the change.</summary>
+    public static string RoutedClerk(string site) => Actors[(site, AccountsPayable)][0];
     public static readonly StepTemplate PaymentRun = new(Stage.Payment, "Payment run", Treasury, AssignmentKind.Role, 2_700, 0.95);
 
     /// <summary>Spread of step durations around their median (log-normal sigma).</summary>

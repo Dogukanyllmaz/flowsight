@@ -13,4 +13,8 @@ public sealed record SyntheticOptions(
     DateTimeOffset? AsOf = null)
 {
     public DateOnly StartDate => Start ?? new DateOnly(2025, 11, 3);
+
+    /// <summary>Day the injected process change takes effect: invoices stop going to a shared queue
+    /// and are routed to their site's clerk. Seven months after <see cref="StartDate"/>.</summary>
+    public DateOnly ChangeDate => StartDate.AddMonths(7);
 }
