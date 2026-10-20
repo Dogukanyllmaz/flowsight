@@ -1,6 +1,3 @@
-import { useCallback, useState } from 'react'
-import type { StageName } from '../data/schemas'
-
 export type Language = 'en' | 'tr'
 
 const en = {
@@ -83,37 +80,6 @@ const tr: Record<StringKey, string> = {
 
 export const strings: Record<Language, Record<StringKey, string>> = { en, tr }
 
-const storageKey = 'flowsight.lang'
-
-function readLanguage(): Language {
-  try {
-    return localStorage.getItem(storageKey) === 'tr' ? 'tr' : 'en'
-  } catch {
-    return 'en'
-  }
-}
-
 export function format(template: string, values: Record<string, string | number> = {}): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? `{${key}}`))
-}
-
-export function useStrings() {
-  const [language, setLanguageState] = useState<Language>(readLanguage)
-
-  const setLanguage = useCallback((next: Language) => {
-    setLanguageState(next)
-    try {
-      localStorage.setItem(storageKey, next)
-    } catch {
-      // Storage unavailable (private mode, blocked): keep the choice for this session only.
-    }
-  }, [])
-
-  const t = useCallback(
-    (key: StringKey, values?: Record<string, string | number>) => format(strings[language][key], values),
-    [language],
-  )
-  const stage = useCallback((name: StageName) => strings[language][`stage.${name}`], [language])
-
-  return { language, setLanguage, t, stage }
 }
