@@ -23,3 +23,14 @@ public sealed record LineJourney(
     LineStatus Status,
     double TotalWorkingMinutes,
     double TotalCalendarDays);
+
+public enum RequestStatus { Open, Completed, Rejected, Cancelled }
+
+/// <summary>A purchase request: its lines plus a request-level view of the seven stages.</summary>
+public sealed record RequestJourney(
+    string CaseId,
+    IReadOnlyList<LineJourney> Lines,
+    IReadOnlyList<StageSpan> Stages,
+    Stage? CurrentStage,
+    RequestStatus Status,
+    double TotalWorkingMinutes);
