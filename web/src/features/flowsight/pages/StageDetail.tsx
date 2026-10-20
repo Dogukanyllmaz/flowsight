@@ -20,6 +20,9 @@ export function StageDetail({ periodId, stage: stageName }: { periodId: string; 
         {t('backToFlow')}
       </a>
       <h1>{t('stageHeading', { stage: stage(stageName), period: periodLabel(periodId) })}</h1>
+      <a className="fs-back" href={formatRoute({ page: 'cards', periodId })}>
+        {t('seeCards')} →
+      </a>
 
       {detail.isPending && <p className="fs-muted">{t('loading')}</p>}
       {detail.isError && <p role="alert">{t('loadError')}</p>}

@@ -66,6 +66,49 @@ export const stageDetailViewSchema = z.object({
   slowestCompleted: z.array(slowCase),
 })
 
+export const patternCodes = [
+  'sharedQueueSearch',
+  'serialApprovalStack',
+  'singlePointOfFailure',
+  'reworkLoop',
+  'batchWaiting',
+  'exceptionQueue',
+] as const
+
+export const changeCodes = [
+  'routeByAttribute',
+  'parallelOrThresholdApproval',
+  'assignToRoleWithDelegation',
+  'validateAtEntry',
+  'dailyProcessingWithSla',
+  'toleranceRulesUpstream',
+] as const
+
+export const cardViewSchema = z.object({
+  id: z.string(),
+  pattern: z.enum(patternCodes),
+  stage: stageName,
+  stepId: z.string(),
+  stepName: z.string(),
+  segment: z.string().nullable(),
+  mapProperty: z.string(),
+  evidence: z.array(z.object({ code: z.string(), values: z.record(z.string(), z.number()) })),
+  proposedChange: z.enum(changeCodes),
+  expectedSavingDaysPerLine: z.number().nullable(),
+  affectedLines: z.number(),
+  expectedSavingDaysTotal: z.number().nullable(),
+})
+
+export const cardsViewSchema = z.object({
+  periodId: z.string(),
+  cards: z.array(cardViewSchema),
+  insufficientData: z.array(z.string()),
+  unmappedActivities: z.array(z.string()),
+})
+
+export type CardView = z.infer<typeof cardViewSchema>
+export type CardsView = z.infer<typeof cardsViewSchema>
+export type PatternCode = (typeof patternCodes)[number]
 export type PeriodsView = z.infer<typeof periodsViewSchema>
 export type StageStatsView = z.infer<typeof stageStatsViewSchema>
 export type OverviewView = z.infer<typeof overviewViewSchema>

@@ -53,3 +53,8 @@ export function useStageDetail(periodId: string, stage: StageName) {
     staleTime: Infinity,
   })
 }
+
+export function useCards(periodId: string) {
+  const source = useSource()
+  return useQuery({ queryKey: ['flowsight', 'cards', periodId], queryFn: () => source.getCards(periodId), staleTime: Infinity })
+}

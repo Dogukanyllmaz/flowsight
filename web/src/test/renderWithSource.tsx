@@ -8,7 +8,10 @@ import fixture from './fixtures/request.json'
 import overviewFixture from './fixtures/overview.json'
 import periodsFixture from './fixtures/periods.json'
 import stageFixture from './fixtures/stage.json'
+import cardsFixture from './fixtures/cards.json'
 import {
+  cardsViewSchema,
+  type CardsView,
   overviewViewSchema,
   periodsViewSchema,
   stageDetailViewSchema,
@@ -20,15 +23,18 @@ export const fixtureRequest: RequestView = requestViewSchema.parse(fixture)
 export const fixtureOverview: OverviewView = overviewViewSchema.parse(overviewFixture)
 export const fixtureStage: StageDetailView = stageDetailViewSchema.parse(stageFixture)
 export const fixturePeriods = periodsViewSchema.parse(periodsFixture)
+export const fixtureCards: CardsView = cardsViewSchema.parse(cardsFixture)
 
 /** In-memory source: the given requests, the last-12 overview and the March invoice drill-down. */
 export function memorySource(
   requests: RequestView[] = [fixtureRequest],
-  owner: { overview?: OverviewView; stage?: StageDetailView } = {},
+  owner: { overview?: OverviewView; stage?: StageDetailView; cards?: CardsView } = {},
 ): FlowSightSource {
   const overview = owner.overview ?? fixtureOverview
   const stage = owner.stage ?? fixtureStage
+  const cards = owner.cards ?? fixtureCards
   return {
+    getCards: async (periodId) => (periodId === cards.periodId ? cards : null),
     getPeriods: async () => fixturePeriods,
     getOverview: async (periodId) => (periodId === overview.periodId ? overview : null),
     getStageDetail: async (periodId, name) => (periodId === stage.periodId && name === stage.stage ? stage : null),

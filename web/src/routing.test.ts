@@ -27,8 +27,19 @@ describe('routing', () => {
     expect(parseRoute('#/track/%E0')).toEqual({ page: 'notFound' })
   })
 
+  it('parses improvement card routes', () => {
+    expect(parseRoute('#/cards')).toEqual({ page: 'cards', periodId: 'last12' })
+    expect(parseRoute('#/cards/2026-03')).toEqual({ page: 'cards', periodId: '2026-03' })
+    expect(parseRoute('#/cards/2026-03/sharedQueueSearch%3Ainvoice-matching')).toEqual({
+      page: 'cards',
+      periodId: '2026-03',
+      cardId: 'sharedQueueSearch:invoice-matching',
+    })
+    expect(parseRoute('#/cards/march')).toEqual({ page: 'notFound' })
+  })
+
   it('round-trips valid routes', () => {
-    for (const hash of ['#/track', '#/track/PR-001783', '#/flow/last12', '#/flow/2026-03/goodsReceipt']) {
+    for (const hash of ['#/track', '#/track/PR-001783', '#/flow/last12', '#/flow/2026-03/goodsReceipt', '#/cards/2026-03', '#/cards/2026-03/reworkLoop%3Asourcing']) {
       expect(formatRoute(parseRoute(hash))).toBe(hash)
     }
   })

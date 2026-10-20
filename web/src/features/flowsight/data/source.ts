@@ -1,4 +1,4 @@
-import type { OverviewView, PeriodsView, StageDetailView } from './ownerSchemas'
+import type { CardsView, OverviewView, PeriodsView, StageDetailView } from './ownerSchemas'
 import type { DemoMeta, RequestIndexEntry, RequestView, StageName } from './schemas'
 
 /**
@@ -17,4 +17,6 @@ export interface FlowSightSource {
   getOverview(periodId: string): Promise<OverviewView | null>
   /** Resolves to null for an unknown period or stage. */
   getStageDetail(periodId: string, stage: StageName): Promise<StageDetailView | null>
+  /** Resolves to null for an unknown period. */
+  getCards(periodId: string): Promise<CardsView | null>
 }

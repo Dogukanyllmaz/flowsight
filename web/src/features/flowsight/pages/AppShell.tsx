@@ -9,7 +9,7 @@ export function AppShell({ route, navigate, owner }: {
   route: Route
   navigate: (route: Route) => void
   /** Renders the process-owner pages; supplied by the app so the shell stays free of page wiring. */
-  owner?: (route: Extract<Route, { page: 'flow' | 'stage' }>) => ReactNode
+  owner?: (route: Extract<Route, { page: 'flow' | 'stage' | 'cards' }>) => ReactNode
 }) {
   return (
     <I18nProvider>
@@ -20,18 +20,21 @@ export function AppShell({ route, navigate, owner }: {
 
 function Shell({ route, navigate, owner }: Parameters<typeof AppShell>[0]) {
   const { t } = useStrings()
-  const ownerView = route.page === 'flow' || route.page === 'stage'
+  const flowView = route.page === 'flow' || route.page === 'stage'
 
   return (
     <>
       <nav className="fs-topbar" aria-label={t('nav.label')}>
         <strong className="fs-brand">{t('appName')}</strong>
         <div className="fs-views">
-          <a href={formatRoute({ page: 'track' })} aria-current={!ownerView && route.page === 'track' ? 'page' : undefined}>
+          <a href={formatRoute({ page: 'track' })} aria-current={route.page === 'track' ? 'page' : undefined}>
             {t('nav.tracker')}
           </a>
-          <a href={formatRoute({ page: 'flow', periodId: 'last12' })} aria-current={ownerView ? 'page' : undefined}>
+          <a href={formatRoute({ page: 'flow', periodId: 'last12' })} aria-current={flowView ? 'page' : undefined}>
             {t('nav.flow')}
+          </a>
+          <a href={formatRoute({ page: 'cards', periodId: 'last12' })} aria-current={route.page === 'cards' ? 'page' : undefined}>
+            {t('nav.cards')}
           </a>
         </div>
         <LanguageToggle />
@@ -44,7 +47,7 @@ function Shell({ route, navigate, owner }: Parameters<typeof AppShell>[0]) {
           showLanguageToggle={false}
         />
       )}
-      {(route.page === 'flow' || route.page === 'stage') && owner?.(route)}
+      {(route.page === 'flow' || route.page === 'stage' || route.page === 'cards') && owner?.(route)}
       {route.page === 'notFound' && (
         <div className="fs-page">
           <p role="alert">{t('pageNotFound')}</p>

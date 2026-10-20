@@ -211,3 +211,20 @@ h2.fs-chart-title { font-size: 1rem; margin: 0 0 8px; }
 .fs-reasons { margin: 4px 0 12px; padding: 10px 14px; border-left: 4px solid var(--fs-accent); background: var(--fs-bg); border-radius: 0 8px 8px 0; }
 .fs-reasons h3 { margin: 0 0 4px; font-size: 0.95rem; }
 .fs-reasons ul { margin: 0; padding-left: 18px; }
+
+.fs-cards { display: grid; grid-template-columns: minmax(240px, 1fr) 2fr; gap: 16px; align-items: start; margin-top: 16px; }
+@media (max-width: 760px) { .fs-cards { grid-template-columns: 1fr; } }
+.fs-card-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.fs-card-list a {
+  display: block; text-decoration: none; color: var(--fs-text);
+  background: var(--fs-surface); border: 1px solid var(--fs-border); border-radius: 10px; padding: 12px 14px;
+}
+.fs-card-list a[aria-current='true'] { border-color: var(--fs-accent); box-shadow: 0 0 0 1px var(--fs-accent); }
+.fs-card-list strong { display: block; }
+.fs-card-list .fs-muted { font-size: 0.85rem; }
+.fs-card-detail h2 { margin: 0 0 4px; }
+.fs-card-detail h3 { font-size: 1rem; margin: 16px 0 6px; }
+.fs-card-detail ul { margin: 0; padding-left: 18px; }
+.fs-saving { font-size: 1.1rem; font-weight: 600; }
+.fs-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; color: var(--fs-muted); }
+.fs-note { margin-top: 16px; font-size: 0.88rem; color: var(--fs-muted); }

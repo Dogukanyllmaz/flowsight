@@ -5,6 +5,7 @@ export type Route =
   | { page: 'track'; caseId?: string }
   | { page: 'flow'; periodId: string }
   | { page: 'stage'; periodId: string; stage: StageName }
+  | { page: 'cards'; periodId: string; cardId?: string }
   | { page: 'notFound' }
 
 const periodPattern = /^(\d{4}-\d{2}|last12)$/
@@ -31,6 +32,11 @@ export function parseRoute(hash: string): Route {
       ? { page: 'stage', periodId, stage: b as StageName }
       : { page: 'notFound' }
   }
+  if (page === 'cards') {
+    const periodId = a ?? 'last12'
+    if (!periodPattern.test(periodId)) return { page: 'notFound' }
+    return b === undefined ? { page: 'cards', periodId } : { page: 'cards', periodId, cardId: b }
+  }
   return { page: 'notFound' }
 }
 
@@ -42,6 +48,8 @@ export function formatRoute(route: Route): string {
       return `#/flow/${route.periodId}`
     case 'stage':
       return `#/flow/${route.periodId}/${route.stage}`
+    case 'cards':
+      return route.cardId ? `#/cards/${route.periodId}/${encodeURIComponent(route.cardId)}` : `#/cards/${route.periodId}`
     default:
       return '#/track'
   }

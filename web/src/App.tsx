@@ -3,6 +3,7 @@ import { FlowSightProvider } from './features/flowsight/data/hooks'
 import { createStaticSource } from './features/flowsight/data/staticSource'
 import { AppShell } from './features/flowsight/pages/AppShell'
 import { FlowOverview } from './features/flowsight/pages/FlowOverview'
+import { ImprovementCards } from './features/flowsight/pages/ImprovementCards'
 import { StageDetail } from './features/flowsight/pages/StageDetail'
 import { useRoute } from './routing'
 
@@ -17,8 +18,14 @@ export default function App() {
         <AppShell route={route} navigate={navigate} owner={(r) =>
             r.page === 'flow' ? (
               <FlowOverview periodId={r.periodId} onPeriodChange={(periodId) => navigate({ page: 'flow', periodId })} />
-            ) : (
+            ) : r.page === 'stage' ? (
               <StageDetail periodId={r.periodId} stage={r.stage} />
+            ) : (
+              <ImprovementCards
+                periodId={r.periodId}
+                cardId={r.cardId}
+                onPeriodChange={(periodId) => navigate({ page: 'cards', periodId })}
+              />
             )
           } />
       </FlowSightProvider>
