@@ -1,3 +1,4 @@
+using FlowSight.Core.Impact;
 using FlowSight.Core.Journeys;
 using FlowSight.Core.Patterns;
 using FlowSight.Core.Statistics;
@@ -63,8 +64,44 @@ public sealed record CardView(
 
 public sealed record CardsView(string PeriodId, IReadOnlyList<CardView> Cards, IReadOnlyList<string> InsufficientData, IReadOnlyList<string> UnmappedActivities);
 
+public sealed record ImpactWindowView(DateTimeOffset Start, DateTimeOffset End);
+
+public sealed record ImpactStatsView(int Steps, double? MedianDays, double? P90Days, double? MedianQueueDays, double AverageWaiting);
+
+public sealed record MonthlyPointView(string PeriodId, double? MedianDays, int Steps);
+
+/// <param name="Index">Position in the map's change list; used in the URL.</param>
+public sealed record ChangeImpactView(
+    int Index,
+    DateOnly Date,
+    string StepId,
+    string StepName,
+    string? Stage,
+    string Description,
+    ImpactWindowView Before,
+    ImpactWindowView After,
+    ImpactStatsView BeforeStats,
+    ImpactStatsView AfterStats,
+    double? MedianChangePercent,
+    string Verdict,
+    IReadOnlyList<MonthlyPointView> Monthly);
+
+public sealed record ChangesView(IReadOnlyList<ChangeImpactView> Changes);
+
 public static class OwnerViews
 {
+    public static ChangesView Changes(IReadOnlyList<ChangeImpact> impacts, int minutesPerDay)
+    {
+        ImpactStatsView Stats(ImpactStats s) => new(s.Steps, Days(s.MedianStepMinutes, minutesPerDay), Days(s.P90StepMinutes, minutesPerDay),
+            Days(s.MedianQueueMinutes, minutesPerDay), s.AverageWaiting);
+
+        return new ChangesView(impacts.Select((i, index) => new ChangeImpactView(
+            index, i.Change.Date, i.StepId, i.StepName, i.Stage is { } st ? Name(st) : null, i.Change.Description,
+            new ImpactWindowView(i.Before.Start, i.Before.End), new ImpactWindowView(i.After.Start, i.After.End),
+            Stats(i.BeforeStats), Stats(i.AfterStats), i.MedianChangePercent, Name(i.Verdict),
+            i.Monthly.Select(m => new MonthlyPointView(m.PeriodId, Days(m.MedianStepMinutes, minutesPerDay), m.Steps)).ToList())).ToList());
+    }
+
     public static CardsView Cards(Period period, PatternResult result, int minutesPerDay) =>
         new(period.Id, result.Cards.Select(c => new CardView(
                 c.Id, c.Pattern, Name(c.Stage), c.StepId, c.StepName, c.Segment, c.MapProperty,

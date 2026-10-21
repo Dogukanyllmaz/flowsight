@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using FlowSight.Core.Calendar;
 using FlowSight.Core.Export;
+using FlowSight.Core.Impact;
 using FlowSight.Core.Journeys;
 using FlowSight.Core.Model;
 using FlowSight.Core.Patterns;
@@ -88,6 +89,9 @@ public static class DemoExporter
                      .Concat(Directory.GetDirectories(stagesDir).SelectMany(d => Directory.GetFiles(d, "*.json")))
                      .Append(Path.Combine(ownerDir, "periods.json")))
             File.Delete(stale);
+
+        Write(Path.Combine(ownerDir, "changes.json"),
+            OwnerViews.Changes(ChangeImpacts.Measure(log, map, calendar), calendar.MinutesPerDay));
 
         var periods = Periods.For(log);
         var baseline = StageStatistics.Compute(lines, periods[^1], calendar);
