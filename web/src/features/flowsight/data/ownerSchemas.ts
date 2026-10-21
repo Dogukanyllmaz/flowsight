@@ -106,6 +106,38 @@ export const cardsViewSchema = z.object({
   unmappedActivities: z.array(z.string()),
 })
 
+const window = z.object({ start: z.string(), end: z.string() })
+const impactStats = z.object({
+  steps: z.number(),
+  medianDays: z.number().nullable(),
+  p90Days: z.number().nullable(),
+  medianQueueDays: z.number().nullable(),
+  averageWaiting: z.number(),
+})
+
+export const verdicts = ['insufficientData', 'improved', 'unchanged', 'worse'] as const
+
+export const changeImpactViewSchema = z.object({
+  index: z.number(),
+  date: z.string(),
+  stepId: z.string(),
+  stepName: z.string(),
+  stage: stageName.nullable(),
+  description: z.string(),
+  before: window,
+  after: window,
+  beforeStats: impactStats,
+  afterStats: impactStats,
+  medianChangePercent: z.number().nullable(),
+  verdict: z.enum(verdicts),
+  monthly: z.array(z.object({ periodId: z.string(), medianDays: z.number().nullable(), steps: z.number() })),
+})
+
+export const changesViewSchema = z.object({ changes: z.array(changeImpactViewSchema) })
+
+export type ChangeImpactView = z.infer<typeof changeImpactViewSchema>
+export type ChangesView = z.infer<typeof changesViewSchema>
+export type Verdict = (typeof verdicts)[number]
 export type CardView = z.infer<typeof cardViewSchema>
 export type CardsView = z.infer<typeof cardsViewSchema>
 export type PatternCode = (typeof patternCodes)[number]

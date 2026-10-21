@@ -38,8 +38,15 @@ describe('routing', () => {
     expect(parseRoute('#/cards/march')).toEqual({ page: 'notFound' })
   })
 
+  it('parses change routes', () => {
+    expect(parseRoute('#/changes')).toEqual({ page: 'changes' })
+    expect(parseRoute('#/changes/0')).toEqual({ page: 'changes', index: 0 })
+    expect(parseRoute('#/changes/x')).toEqual({ page: 'notFound' })
+    expect(parseRoute('#/changes/-1')).toEqual({ page: 'notFound' })
+  })
+
   it('round-trips valid routes', () => {
-    for (const hash of ['#/track', '#/track/PR-001783', '#/flow/last12', '#/flow/2026-03/goodsReceipt', '#/cards/2026-03', '#/cards/2026-03/reworkLoop%3Asourcing']) {
+    for (const hash of ['#/changes', '#/changes/2', '#/track', '#/track/PR-001783', '#/flow/last12', '#/flow/2026-03/goodsReceipt', '#/cards/2026-03', '#/cards/2026-03/reworkLoop%3Asourcing']) {
       expect(formatRoute(parseRoute(hash))).toBe(hash)
     }
   })

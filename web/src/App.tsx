@@ -20,6 +20,8 @@ export default function App() {
               <FlowOverview periodId={r.periodId} onPeriodChange={(periodId) => navigate({ page: 'flow', periodId })} />
             ) : r.page === 'stage' ? (
               <StageDetail periodId={r.periodId} stage={r.stage} />
+            ) : r.page === 'changes' ? (
+              <div className="fs-page">{r.page}</div>
             ) : (
               <ImprovementCards
                 periodId={r.periodId}

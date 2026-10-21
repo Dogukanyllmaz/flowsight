@@ -58,3 +58,8 @@ export function useCards(periodId: string) {
   const source = useSource()
   return useQuery({ queryKey: ['flowsight', 'cards', periodId], queryFn: () => source.getCards(periodId), staleTime: Infinity })
 }
+
+export function useChanges() {
+  const source = useSource()
+  return useQuery({ queryKey: ['flowsight', 'changes'], queryFn: () => source.getChanges(), staleTime: Infinity })
+}

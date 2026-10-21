@@ -9,7 +9,7 @@ export function AppShell({ route, navigate, owner }: {
   route: Route
   navigate: (route: Route) => void
   /** Renders the process-owner pages; supplied by the app so the shell stays free of page wiring. */
-  owner?: (route: Extract<Route, { page: 'flow' | 'stage' | 'cards' }>) => ReactNode
+  owner?: (route: Extract<Route, { page: 'flow' | 'stage' | 'cards' | 'changes' }>) => ReactNode
 }) {
   return (
     <I18nProvider>
@@ -36,6 +36,9 @@ function Shell({ route, navigate, owner }: Parameters<typeof AppShell>[0]) {
           <a href={formatRoute({ page: 'cards', periodId: 'last12' })} aria-current={route.page === 'cards' ? 'page' : undefined}>
             {t('nav.cards')}
           </a>
+          <a href={formatRoute({ page: 'changes' })} aria-current={route.page === 'changes' ? 'page' : undefined}>
+            {t('nav.changes')}
+          </a>
         </div>
         <LanguageToggle />
       </nav>
@@ -47,7 +50,7 @@ function Shell({ route, navigate, owner }: Parameters<typeof AppShell>[0]) {
           showLanguageToggle={false}
         />
       )}
-      {(route.page === 'flow' || route.page === 'stage' || route.page === 'cards') && owner?.(route)}
+      {(route.page === 'flow' || route.page === 'stage' || route.page === 'cards' || route.page === 'changes') && owner?.(route)}
       {route.page === 'notFound' && (
         <div className="fs-page">
           <p role="alert">{t('pageNotFound')}</p>

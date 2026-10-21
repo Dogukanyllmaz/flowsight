@@ -1,4 +1,4 @@
-import { cardsViewSchema, overviewViewSchema, periodsViewSchema, stageDetailViewSchema } from './ownerSchemas'
+import { cardsViewSchema, changesViewSchema, overviewViewSchema, periodsViewSchema, stageDetailViewSchema } from './ownerSchemas'
 import { demoMetaSchema, requestIndexSchema, requestViewSchema, stageNames } from './schemas'
 import type { FlowSightSource } from './source'
 
@@ -49,6 +49,9 @@ export function createStaticSource(baseUrl: string): FlowSightSource {
       if (!periodPattern.test(periodId)) return null
       const data = await get(`owner/cards/${periodId}.json`)
       return data === null ? null : cardsViewSchema.parse(data)
+    },
+    async getChanges() {
+      return changesViewSchema.parse(await get('owner/changes.json'))
     },
   }
 }
