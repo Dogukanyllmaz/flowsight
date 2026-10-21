@@ -11,7 +11,15 @@ It serves two audiences:
 The engine is a dependency-free .NET library, so it can run on synthetic data for this demo or be embedded in
 a host application that reads real workflow and ERP history.
 
-> **Status: M4 — waiting reasons, improvement cards and before/after measurement.** All data in this repository is synthetic and generated from a fixed seed.
+> **Status: v1.0.** All data in this repository is synthetic and generated from a fixed seed.
+>
+> **Live demo:** https://dogukanyllmaz.github.io/flowsight/ (available once published)
+
+| Requester: where is my request? | Process owner: where does it pile up? |
+|---|---|
+| ![Request tracker](docs/screenshots/tracker.png) | ![Flow overview](docs/screenshots/flow-overview.png) |
+| **Process owner: what to change?** | **Process owner: did it work?** |
+| ![Improvement card](docs/screenshots/improvement-card.png) | ![Before and after a change](docs/screenshots/before-after.png) |
 
 ## How FlowSight explains a bottleneck
 
@@ -77,6 +85,10 @@ dotnet test
 npm --prefix web run test -- --run
 ```
 
+Every push runs both test suites and the web build on GitHub Actions, plus a scan for sensitive terms whose list is
+kept in a repository secret, never in the repository. A second workflow exports the demo data, builds the web app and
+publishes it to GitHub Pages; it runs only while the repository is public.
+
 ## How it works
 
 | Part | Responsibility |
@@ -96,7 +108,7 @@ Design and plans: [`docs/design`](docs/design) · [`docs/plans`](docs/plans).
 | **M2** ✅ | Stage statistics, bottleneck ranking, flow overview, stage drill-down |
 | **M3** ✅ | Waiting reasons, process map, bottleneck patterns and improvement cards |
 | **M4** ✅ | Before / after measurement of process changes |
-| M5 | CI, live demo on GitHub Pages, v1.0 |
+| **M5** ✅ | CI, live demo on GitHub Pages, v1.0 |
 
 ## License
 
