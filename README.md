@@ -13,7 +13,7 @@ a host application that reads real workflow and ERP history.
 
 > **Status: v1.0.** All data in this repository is synthetic and generated from a fixed seed.
 >
-> **Live demo:** https://dogukanyllmaz.github.io/flowsight/ (available once published)
+> **Live demo:** https://dogukanyllmaz.github.io/flowsight/
 
 | Requester: where is my request? | Process owner: where does it pile up? |
 |---|---|
@@ -87,7 +87,7 @@ npm --prefix web run test -- --run
 
 Every push runs both test suites and the web build on GitHub Actions, plus a scan for sensitive terms whose list is
 kept in a repository secret, never in the repository. A second workflow exports the demo data, builds the web app and
-publishes it to GitHub Pages; it runs only while the repository is public.
+publishes it to GitHub Pages on every push to `main` (only while the repository is public).
 
 ## How it works
 
