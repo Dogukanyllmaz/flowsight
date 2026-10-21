@@ -111,7 +111,7 @@ function ChangeDetail({ change }: { change: ChangeImpactView }) {
         <span aria-hidden="true">{verdictIcon[change.verdict]} </span>
         {verdictText}
       </p>
-      <p className="fs-muted">{t('windowsCompared', { days: windowDays, date: date(change.date) })}</p>
+      {windowDays > 0 && <p className="fs-muted">{t('windowsCompared', { days: windowDays, date: date(change.date) })}</p>}
 
       <div className="fs-table-wrap">
         <table className="fs-table">

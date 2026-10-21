@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { niceMax } from './BarChart'
+import { useStrings } from '../../i18n/I18n'
 
 export interface TrendSeries {
   key: string
@@ -26,6 +27,8 @@ export function TrendChart({ label, summary, xLabels, series, format, columns, m
   marker?: { index: number; label: string }
 }) {
   const [active, setActive] = useState<number | null>(null)
+  const { language } = useStrings()
+  const tickFormat = new Intl.NumberFormat(language === 'tr' ? 'tr-TR' : 'en-GB', { maximumFractionDigits: 2 })
   const all = series.flatMap((s) => s.values).filter((v): v is number => v !== null)
   const max = niceMax(Math.max(1, ...all))
   const plotW = width - margin.left - margin.right
@@ -71,11 +74,11 @@ export function TrendChart({ label, summary, xLabels, series, format, columns, m
       </div>
       <div className="fs-chart-frame">
         <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${label}. ${summary}`}>
-          {ticks.map((t) => (
-            <g key={t} className="fs-grid">
-              <line x1={margin.left} x2={width - margin.right} y1={y(t)} y2={y(t)} />
-              <text x={margin.left - 6} y={y(t)} dy="0.32em" textAnchor="end">
-                {t}
+          {ticks.map((tick) => (
+            <g key={tick} className="fs-grid">
+              <line x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} />
+              <text x={margin.left - 6} y={y(tick)} dy="0.32em" textAnchor="end">
+                {tickFormat.format(tick)}
               </text>
             </g>
           ))}

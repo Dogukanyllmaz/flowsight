@@ -82,6 +82,16 @@ describe('FlowOverview', () => {
     expect(options).toHaveLength(13)
   })
 
+  it('formats the share of lead time in Turkish', async () => {
+    renderOverview()
+    await bottleneckRows()
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'TR' }))
+
+    const table = screen.getByRole('table', { name: /darboğaz/i })
+    expect(within(within(table).getAllByRole('row')[1]).getByText('%29,8')).toBeInTheDocument()
+  })
+
   it('switches labels to Turkish', async () => {
     renderOverview()
     await bottleneckRows()

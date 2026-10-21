@@ -132,7 +132,7 @@ export function FlowOverview({ periodId, onPeriodChange }: { periodId: string; o
                       <th scope="row">
                         <a href={formatRoute({ page: 'stage', periodId, stage: s.stage })}>{stage(s.stage)}</a>
                       </th>
-                      <td>{s.sharePercent}%</td>
+                      <td>{t('percentValue', { percent: s.sharePercent })}</td>
                       <td>{days(s.medianDays)}</td>
                       <td>{days(s.medianInclOpenDays)}</td>
                       <td>{days(s.p90Days)}</td>

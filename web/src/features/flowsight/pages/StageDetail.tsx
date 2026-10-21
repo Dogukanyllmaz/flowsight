@@ -78,7 +78,7 @@ function Body({ d }: { d: StageDetailView }) {
       <BarChart
         label={t('ageingTitle')}
         summary={t('ageingSummary')}
-        columns={[t('colAge'), t('colCount'), t('colCount')]}
+        columns={[t('colAge'), t('colCount'), t('colDetail')]}
         bars={ageBuckets.map((b) => ({
           key: b,
           label: t(`age.${b}`),

@@ -73,6 +73,15 @@ describe('BeforeAfter', () => {
     expect(within(waiting).getAllByText('–').length).toBe(2)
   })
 
+  it('hides the comparison line when there is no window', async () => {
+    const empty = { ...change, verdict: 'insufficientData' as const, medianChangePercent: null,
+      before: { start: change.after.start, end: change.after.start }, after: { start: change.after.start, end: change.after.start } }
+    renderChanges(0, { changes: [empty] })
+
+    await screen.findByText('Not enough data to judge.')
+    expect(screen.queryByText(/^Compared:/)).not.toBeInTheDocument()
+  })
+
   it('ShowsNotEnoughData', async () => {
     const thin: ChangesView = {
       changes: [{

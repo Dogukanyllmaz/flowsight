@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { fixtureStage, memorySource, renderWithSource } from '../../../test/renderWithSource'
 import { StageDetail } from './StageDetail'
 
@@ -38,6 +38,13 @@ describe('StageDetail', () => {
 
     expect(await screen.findByText(fixtureStage.byPerson[0].key)).toBeInTheDocument()
     expect(screen.getByText(/not for rating people/)).toBeInTheDocument()
+  })
+
+  it('gives the ageing table distinct column headers', async () => {
+    renderWithSource(<StageDetail periodId="2026-03" stage="invoice" />)
+
+    const table = await screen.findByRole('table', { name: /Ageing of lines waiting/ })
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Age', 'Lines', 'Detail'])
   })
 
   it('ShowsNotFound_ForUnknownStage', async () => {
