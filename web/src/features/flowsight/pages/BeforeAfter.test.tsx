@@ -59,6 +59,20 @@ describe('BeforeAfter', () => {
     expect(screen.getByText('138,3')).toBeInTheDocument()
   })
 
+  it('keeps the sign when the change is small', async () => {
+    renderChanges(0, { changes: [{ ...change, verdict: 'unchanged', medianChangePercent: -18 }] })
+
+    expect(await screen.findByText('Median time in the step changed little (−18%).')).toBeInTheDocument()
+  })
+
+  it('shows a dash when there is no average to show', async () => {
+    renderChanges(0, { changes: [{ ...change, afterStats: { ...change.afterStats, averageWaiting: null } }] })
+
+    const table = await screen.findByRole('table', { name: /Before and after/ })
+    const waiting = within(table).getAllByRole('row').find((r) => r.querySelector('th')?.textContent === 'Average items waiting')!
+    expect(within(waiting).getAllByText('–').length).toBe(2)
+  })
+
   it('ShowsNotEnoughData', async () => {
     const thin: ChangesView = {
       changes: [{

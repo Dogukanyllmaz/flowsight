@@ -8,8 +8,8 @@ public sealed record ImpactWindow(DateTimeOffset Start, DateTimeOffset End);
 
 /// <param name="Steps">Events of the changed step completed in the window.</param>
 /// <param name="MedianQueueMinutes">Queued → picked up; events without a start time are left out.</param>
-/// <param name="AverageWaiting">Average number of the step's items open at noon on the window's working days.</param>
-public sealed record ImpactStats(int Steps, double? MedianStepMinutes, double? P90StepMinutes, double? MedianQueueMinutes, double AverageWaiting);
+/// <param name="AverageWaiting">Average number of the step's items open at noon on the window's working days; null when no working day falls in the window.</param>
+public sealed record ImpactStats(int Steps, double? MedianStepMinutes, double? P90StepMinutes, double? MedianQueueMinutes, double? AverageWaiting);
 
 public enum ImpactVerdict { InsufficientData, Improved, Unchanged, Worse }
 

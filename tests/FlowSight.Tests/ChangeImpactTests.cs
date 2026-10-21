@@ -60,6 +60,8 @@ public class ChangeImpactTests
 
         Assert.Equal(ImpactVerdict.InsufficientData, impacts.Single(i => i.StepId == "create-order").Verdict);
         Assert.Equal(ImpactVerdict.InsufficientData, impacts.Single(i => i.StepId == "goods-receipt").Verdict);
+        // No working day was sampled, so there is no average — not an average of zero.
+        Assert.Null(impacts.Single(i => i.StepId == "goods-receipt").AfterStats.AverageWaiting);
     }
 
     [Fact]

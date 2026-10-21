@@ -69,7 +69,7 @@ function ChangeDetail({ change }: { change: ChangeImpactView }) {
   const { t, stage, language } = useStrings()
   const date = useDateLabel()
   const periodLabel = usePeriodLabel()
-  const num = (value: number) => new Intl.NumberFormat(language === 'tr' ? 'tr-TR' : 'en-GB', { maximumFractionDigits: 1 }).format(value)
+  const num = (value: number | null) => value === null ? '–' : new Intl.NumberFormat(language === 'tr' ? 'tr-TR' : 'en-GB', { maximumFractionDigits: 1 }).format(value)
 
   const days = (value: number | null) => (value === null ? '–' : t('workingDaysShort', { days: value }))
   const pct = (before: number | null, after: number | null) =>
@@ -80,7 +80,9 @@ function ChangeDetail({ change }: { change: ChangeImpactView }) {
   const verdictText =
     change.verdict === 'insufficientData' || change.medianChangePercent === null
       ? t('verdictSentence.insufficientData')
-      : t(`verdictSentence.${change.verdict}`, { percent: Math.abs(change.medianChangePercent) })
+      : change.verdict === 'unchanged'
+        ? t('verdictSentence.unchanged', { change: signed(change.medianChangePercent) })
+        : t(`verdictSentence.${change.verdict}`, { percent: Math.abs(change.medianChangePercent) })
 
   const rows: [string, string, string, string][] = [
     [t('colSteps'), num(change.beforeStats.steps), num(change.afterStats.steps), pct(change.beforeStats.steps, change.afterStats.steps)],

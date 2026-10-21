@@ -66,7 +66,7 @@ public sealed record CardsView(string PeriodId, IReadOnlyList<CardView> Cards, I
 
 public sealed record ImpactWindowView(DateTimeOffset Start, DateTimeOffset End);
 
-public sealed record ImpactStatsView(int Steps, double? MedianDays, double? P90Days, double? MedianQueueDays, double AverageWaiting);
+public sealed record ImpactStatsView(int Steps, double? MedianDays, double? P90Days, double? MedianQueueDays, double? AverageWaiting);
 
 public sealed record MonthlyPointView(string PeriodId, double? MedianDays, int Steps);
 

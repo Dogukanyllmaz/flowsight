@@ -112,7 +112,7 @@ const impactStats = z.object({
   medianDays: z.number().nullable(),
   p90Days: z.number().nullable(),
   medianQueueDays: z.number().nullable(),
-  averageWaiting: z.number(),
+  averageWaiting: z.number().nullable(),
 })
 
 export const verdicts = ['insufficientData', 'improved', 'unchanged', 'worse'] as const

@@ -96,7 +96,7 @@ public static class ChangeImpacts
             Percentiles.Median(totals),
             Percentiles.Percentile(totals, 0.9),
             Percentiles.Median(queues),
-            counts.Count == 0 ? 0 : Math.Round(counts.Average(), 1));
+            counts.Count == 0 ? null : Math.Round(counts.Average(), 1));
     }
 
     private static DateTimeOffset At(DateOnly day, TimeSpan offset) => new(day.ToDateTime(TimeOnly.MinValue), offset);
