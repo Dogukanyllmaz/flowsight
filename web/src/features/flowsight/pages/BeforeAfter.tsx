@@ -49,7 +49,7 @@ export function BeforeAfter({ index }: { index?: number }) {
                   <strong>
                     {date(c.date)} · {c.stepName}
                   </strong>
-                  <span className="fs-muted">{c.description}</span>
+                  <span className="fs-muted">{c.description}</span>{' '}
                   <span className={`fs-verdict fs-verdict-${c.verdict}`}>
                     <span aria-hidden="true">{verdictIcon[c.verdict]} </span>
                     <span>{t(`verdict.${c.verdict}`)}</span>

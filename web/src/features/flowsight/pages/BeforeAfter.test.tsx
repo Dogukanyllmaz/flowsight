@@ -30,6 +30,13 @@ describe('BeforeAfter', () => {
     expect(within(items[0]).getByText('improved')).toBeInTheDocument()
   })
 
+  it('separates the description from the verdict', async () => {
+    renderChanges()
+
+    const list = await screen.findByRole('list', { name: 'Process changes' })
+    expect(within(list).getByRole('link').textContent).toContain(`${change.description} `)
+  })
+
   it('shows before and after with the change', async () => {
     renderChanges(0)
 

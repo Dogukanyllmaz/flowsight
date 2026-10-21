@@ -225,6 +225,7 @@ h2.fs-chart-title { font-size: 1rem; margin: 0 0 8px; }
 .fs-card-detail h2 { margin: 0 0 4px; }
 .fs-card-detail h3 { font-size: 1rem; margin: 16px 0 6px; }
 .fs-card-detail ul { margin: 0; padding-left: 18px; }
+.fs-card-detail a { color: var(--fs-accent); }
 .fs-saving { font-size: 1.1rem; font-weight: 600; }
 .fs-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; color: var(--fs-muted); }
 .fs-note { margin-top: 16px; font-size: 0.88rem; color: var(--fs-muted); }
