@@ -27,7 +27,7 @@ export const toneIcon: Record<Tone, string> = {
 /** Rounds an axis maximum up so that four equal steps land on round numbers. */
 export function niceMax(value: number): number {
   if (value <= 0) return 1
-  const magnitude = 10 ** Math.floor(Math.log10(value))
+  const magnitude = 10 ** Math.floor(Math.log10(value / 4))
   const step = [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s * 4 >= value) ?? 10 * magnitude
   return step * 4
 }

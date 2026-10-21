@@ -40,6 +40,12 @@ describe('ImprovementCards', () => {
     expect(screen.getByRole('link', { name: /stage in detail/ })).toHaveAttribute('href', '#/flow/2026-03/invoice')
   })
 
+  it('links a card to the before/after of its step', async () => {
+    renderCards('sharedQueueSearch:invoice-matching')
+
+    expect(await screen.findByRole('link', { name: /see before and after/ })).toHaveAttribute('href', '#/changes/0')
+  })
+
   it('shows the segment when a pattern is limited to one category', async () => {
     renderCards('reworkLoop:sourcing')
 

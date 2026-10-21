@@ -1,5 +1,6 @@
 import { formatRoute } from '../../../routing'
-import { useCards, useMeta, usePeriods } from '../data/hooks'
+import { useCards, useChanges, useMeta, usePeriods } from '../data/hooks'
+import { useDateLabel } from './BeforeAfter'
 import type { CardView } from '../data/ownerSchemas'
 import { useStrings } from '../i18n/I18n'
 import { strings, type StringKey } from '../i18n/strings'
@@ -116,6 +117,9 @@ function saving(c: CardView, t: ReturnType<typeof useStrings>['t']) {
 function CardDetail({ card, periodId }: { card: CardView; periodId: string }) {
   const { t, stage } = useStrings()
   const meta = useMeta()
+  const changes = useChanges()
+  const dateLabel = useDateLabel()
+  const change = changes.data?.changes.find((c) => c.stepId === card.stepId)
   const minutesPerDay = meta.data?.minutesPerDay ?? 540
   const days = (minutes: number) => t('workingDaysShort', { days: Math.round((minutes / minutesPerDay) * 10) / 10 })
 
@@ -160,6 +164,11 @@ function CardDetail({ card, periodId }: { card: CardView; periodId: string }) {
       <p className="fs-saving">{saving(card, t)}</p>
       {card.expectedSavingDaysTotal !== null && <p className="fs-muted">{t('expectedSavingTotal', { days: card.expectedSavingDaysTotal })}</p>}
 
+      {change && (
+        <p>
+          <a href={formatRoute({ page: 'changes', index: change.index })}>{t('cardChangeLink', { date: dateLabel(change.date) })} →</a>
+        </p>
+      )}
       <a href={formatRoute({ page: 'stage', periodId, stage: card.stage })}>{t('openStage')} →</a>
     </article>
   )

@@ -228,3 +228,10 @@ h2.fs-chart-title { font-size: 1rem; margin: 0 0 8px; }
 .fs-saving { font-size: 1.1rem; font-weight: 600; }
 .fs-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; color: var(--fs-muted); }
 .fs-note { margin-top: 16px; font-size: 0.88rem; color: var(--fs-muted); }
+
+.fs-verdict { display: inline-block; margin-top: 4px; font-size: 0.85rem; font-weight: 600; }
+.fs-verdict-improved { color: var(--fs-pace-faster); }
+.fs-verdict-worse { color: var(--fs-pace-muchSlower); }
+.fs-verdict-unchanged, .fs-verdict-insufficientData { color: var(--fs-muted); }
+.fs-marker line { stroke: var(--fs-accent); stroke-width: 2; stroke-dasharray: 4 3; }
+.fs-marker text { fill: var(--fs-accent); font-size: 12px; font-weight: 600; }

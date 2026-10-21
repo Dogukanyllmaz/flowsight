@@ -14,7 +14,7 @@ const height = 260
 const margin = { top: 16, right: 56, bottom: 32, left: 36 }
 
 /** One-axis line chart with a crosshair readout (pointer and arrow keys), direct end labels and a hidden table. */
-export function TrendChart({ label, summary, xLabels, series, format, columns }: {
+export function TrendChart({ label, summary, xLabels, series, format, columns, marker }: {
   label: string
   summary: string
   xLabels: string[]
@@ -22,6 +22,8 @@ export function TrendChart({ label, summary, xLabels, series, format, columns }:
   format: (value: number | null) => string
   /** Header label for the hidden table's first column. */
   columns: string
+  /** Optional labelled vertical rule, e.g. the month a process change took effect. */
+  marker?: { index: number; label: string }
 }) {
   const [active, setActive] = useState<number | null>(null)
   const all = series.flatMap((s) => s.values).filter((v): v is number => v !== null)
@@ -85,6 +87,14 @@ export function TrendChart({ label, summary, xLabels, series, format, columns }:
             ) : null,
           )}
           <line className="fs-axis" x1={margin.left} x2={width - margin.right} y1={y(0)} y2={y(0)} />
+          {marker && marker.index >= 0 && marker.index < xLabels.length && (
+            <g className="fs-marker">
+              <line x1={x(marker.index)} x2={x(marker.index)} y1={margin.top} y2={margin.top + plotH} />
+              <text x={x(marker.index) + 4} y={margin.top + 10}>
+                {marker.label}
+              </text>
+            </g>
+          )}
           {series.map((s) => {
             const lastValue = s.values[lastIndex]
             return (

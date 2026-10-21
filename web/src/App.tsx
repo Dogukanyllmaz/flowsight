@@ -3,6 +3,7 @@ import { FlowSightProvider } from './features/flowsight/data/hooks'
 import { createStaticSource } from './features/flowsight/data/staticSource'
 import { AppShell } from './features/flowsight/pages/AppShell'
 import { FlowOverview } from './features/flowsight/pages/FlowOverview'
+import { BeforeAfter } from './features/flowsight/pages/BeforeAfter'
 import { ImprovementCards } from './features/flowsight/pages/ImprovementCards'
 import { StageDetail } from './features/flowsight/pages/StageDetail'
 import { useRoute } from './routing'
@@ -21,7 +22,7 @@ export default function App() {
             ) : r.page === 'stage' ? (
               <StageDetail periodId={r.periodId} stage={r.stage} />
             ) : r.page === 'changes' ? (
-              <div className="fs-page">{r.page}</div>
+              <BeforeAfter index={r.index} />
             ) : (
               <ImprovementCards
                 periodId={r.periodId}
