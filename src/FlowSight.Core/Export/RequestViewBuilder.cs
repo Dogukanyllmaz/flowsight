@@ -9,6 +9,11 @@ public static class RequestViewBuilder
     /// <param name="allLines">Lines to compare against; only completed lines with the same path and category are used.</param>
     /// <param name="reasons">Waiting reasons per (caseId, lineId); lines without an entry have none.</param>
     public static RequestView Build(RequestJourney request, IReadOnlyList<LineJourney> allLines, int minutesPerDay, DateTimeOffset asOf,
+        IReadOnlyDictionary<(string, string), IReadOnlyList<WaitingReason>>? reasons = null) =>
+        Build(request, new SimilarityIndex(allLines), minutesPerDay, asOf, reasons);
+
+    /// <summary>For many requests: build the <paramref name="similarity"/> index once and reuse it.</summary>
+    public static RequestView Build(RequestJourney request, SimilarityIndex similarity, int minutesPerDay, DateTimeOffset asOf,
         IReadOnlyDictionary<(string, string), IReadOnlyList<WaitingReason>>? reasons = null)
     {
         IReadOnlyList<WaitingReasonView> ReasonsOf(LineJourney line) =>
@@ -26,7 +31,7 @@ public static class RequestViewBuilder
             span.LeftAt,
             Days(span.WorkingMinutes),
             Math.Round(span.CalendarDays, 1),
-            MaybeDays(Similarity.TypicalStageMinutes(span.Stage, comparedLine, allLines)));
+            MaybeDays(similarity.TypicalStageMinutes(span.Stage, comparedLine)));
 
         // The request is compared through its slowest open line, or its slowest line once closed.
         var representative = request.Lines
@@ -36,7 +41,7 @@ public static class RequestViewBuilder
 
         // Only open and paid requests are comparable with completed journeys; "slower than 0 %" says nothing.
         var slowerThan = request.Status is RequestStatus.Open or RequestStatus.Completed
-            ? Similarity.SlowerThanPercent(representative, allLines)
+            ? similarity.SlowerThanPercent(representative)
             : null;
         if (slowerThan == 0) slowerThan = null;
 

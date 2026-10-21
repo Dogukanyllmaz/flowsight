@@ -45,11 +45,6 @@ public static class DemoExporter
         var lines = JourneyBuilder.Build(log, calendar);
         var journeys = RequestAggregator.Build(lines);
 
-        // Comparisons only ever use lines with the same path and category, so hand each request just that group.
-        var groups = lines
-            .GroupBy(l => (l.Line.Path, l.Line.ItemCategory))
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<LineJourney>)g.ToList());
-
         // Remove only files this exporter writes; anything else in the folder is left alone.
         var requestDir = Directory.CreateDirectory(Path.Combine(outDir, "requests")).FullName;
         foreach (var stale in Directory.GetFiles(requestDir, "PR-*.json").Append(Path.Combine(requestDir, "index.json")))
@@ -59,12 +54,10 @@ public static class DemoExporter
         var evaluator = new WaitingReasonEvaluator(log, map);
         var reasons = lines.ToDictionary(l => (l.Line.CaseId, l.Line.LineId), evaluator.For);
 
+        var similarity = new SimilarityIndex(lines);
         foreach (var journey in journeys)
-        {
-            var peers = journey.Lines.SelectMany(l => groups[(l.Line.Path, l.Line.ItemCategory)]).Distinct().ToList();
             Write(Path.Combine(requestDir, $"{journey.CaseId}.json"),
-                RequestViewBuilder.Build(journey, peers, calendar.MinutesPerDay, log.AsOf, reasons));
-        }
+                RequestViewBuilder.Build(journey, similarity, calendar.MinutesPerDay, log.AsOf, reasons));
 
         Write(Path.Combine(requestDir, "index.json"), journeys
             .Select(j => new RequestIndexEntry(j.CaseId, JsonDefaults.Name(j.Status), j.CurrentStage is { } s ? JsonDefaults.Name(s) : null))

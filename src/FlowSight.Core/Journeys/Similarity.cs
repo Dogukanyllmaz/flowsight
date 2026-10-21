@@ -43,3 +43,67 @@ public static class Similarity
         return values.Count % 2 == 1 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
     }
 }
+
+/// <summary>
+/// The same comparisons as <see cref="Similarity"/> for many lines at once: completed lines are grouped by path and
+/// category and their durations sorted once, instead of filtering every line for every comparison.
+/// </summary>
+public sealed class SimilarityIndex
+{
+    private sealed record Group(HashSet<(string, string)> Keys, double[] Totals, double[][] StageMinutes);
+
+    private readonly Dictionary<(LinePath, string), Group> _groups;
+
+    public SimilarityIndex(IReadOnlyList<LineJourney> all)
+    {
+        _groups = all
+            .Where(l => l.Status == LineStatus.Completed)
+            .GroupBy(l => (l.Line.Path, l.Line.ItemCategory))
+            .ToDictionary(g => g.Key, g => new Group(
+                g.Select(l => (l.Line.CaseId, l.Line.LineId)).ToHashSet(),
+                g.Select(l => l.TotalWorkingMinutes).Order().ToArray(),
+                Stages.All.Select(s => g.Select(l => l.Stages[(int)s - 1].WorkingMinutes).Order().ToArray()).ToArray()));
+    }
+
+    public double? TypicalStageMinutes(Stage stage, LineJourney line)
+    {
+        if (!_groups.TryGetValue((line.Line.Path, line.Line.ItemCategory), out var group)) return null;
+        var self = IsMember(group, line) ? line.Stages[(int)stage - 1].WorkingMinutes : (double?)null;
+        return MedianWithout(group.StageMinutes[(int)stage - 1], self);
+    }
+
+    public double? SlowerThanPercent(LineJourney line)
+    {
+        if (!_groups.TryGetValue((line.Line.Path, line.Line.ItemCategory), out var group)) return null;
+        var count = group.Totals.Length - (IsMember(group, line) ? 1 : 0);
+        if (count < Similarity.MinimumSample) return null;
+        // The line's own total is never strictly below itself, so excluding it does not change the count below.
+        var below = LowerBound(group.Totals, line.TotalWorkingMinutes);
+        return Math.Round(100.0 * below / count, 1);
+    }
+
+    private static bool IsMember(Group group, LineJourney line) =>
+        line.Status == LineStatus.Completed && group.Keys.Contains((line.Line.CaseId, line.Line.LineId));
+
+    /// <summary>Median of a sorted array with one occurrence of <paramref name="excluded"/> left out.</summary>
+    private static double? MedianWithout(double[] sorted, double? excluded)
+    {
+        var skip = excluded is { } e ? LowerBound(sorted, e) : sorted.Length;
+        var count = sorted.Length - (excluded is null ? 0 : 1);
+        if (count < Similarity.MinimumSample) return null;
+        double At(int i) => i < skip ? sorted[i] : sorted[i + 1];
+        var mid = count / 2;
+        return count % 2 == 1 ? At(mid) : (At(mid - 1) + At(mid)) / 2;
+    }
+
+    private static int LowerBound(double[] sorted, double value)
+    {
+        int lo = 0, hi = sorted.Length;
+        while (lo < hi)
+        {
+            var mid = (lo + hi) / 2;
+            if (sorted[mid] < value) lo = mid + 1; else hi = mid;
+        }
+        return lo;
+    }
+}

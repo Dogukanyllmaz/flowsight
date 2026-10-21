@@ -57,4 +57,20 @@ public class SimilarityTests
 
         Assert.Null(Similarity.SlowerThanPercent(line, all));
     }
+
+    [Fact]
+    public void Index_MatchesTheDirectComparison()
+    {
+        var calendar = new FlowSight.Core.Calendar.WorkCalendar(FlowSight.Core.Calendar.CalendarRules.Default);
+        var log = FlowSight.Synthetic.Generator.Generate(new FlowSight.Synthetic.SyntheticOptions(Requests: 400), calendar);
+        var lines = JourneyBuilder.Build(log, calendar);
+        var index = new SimilarityIndex(lines);
+
+        foreach (var line in lines)
+        {
+            Assert.Equal(Similarity.SlowerThanPercent(line, lines), index.SlowerThanPercent(line));
+            foreach (var stage in Stages.All)
+                Assert.Equal(Similarity.TypicalStageMinutes(stage, line, lines), index.TypicalStageMinutes(stage, line));
+        }
+    }
 }
