@@ -6,12 +6,12 @@ each stage takes in working time, and shows where requests get stuck.
 
 It serves two audiences:
 - **Requesters and managers** see where their request is, how long it has been there and **why it is waiting** — without anyone's name.
-- **Process owners and internal auditors** see where work piles up, which stages are slower than normal, and — per stage — waiting vs. working time, time per role and per person, and the slowest cases — plus **improvement cards**: bottleneck patterns found in the data, explained by the process map, with a proposed change and its expected saving.
+- **Process owners and internal auditors** see where work piles up, which stages are slower than normal, and — per stage — waiting vs. working time, time per role and per person, and the slowest cases — plus **improvement cards**: bottleneck patterns found in the data, explained by the process map, with a proposed change and its expected saving — and, once a change is made, **whether it worked**.
 
 The engine is a dependency-free .NET library, so it can run on synthetic data for this demo or be embedded in
 a host application that reads real workflow and ERP history.
 
-> **Status: M3 — waiting reasons and improvement cards.** All data in this repository is synthetic and generated from a fixed seed.
+> **Status: M4 — waiting reasons, improvement cards and before/after measurement.** All data in this repository is synthetic and generated from a fixed seed.
 
 ## How FlowSight explains a bottleneck
 
@@ -33,6 +33,23 @@ The synthetic data contains one ground-truth scenario per pattern (for example, 
 pattern is found where it was injected and nowhere else. Open requests also carry plain-language **waiting reasons**
 (assignee away, returned for correction, price variance, partial delivery, shared queue, weekly payment run).
 
+### Closing the loop: did the change work?
+
+When a process change is made, it is recorded in the map's `changes` list with its date and the values that applied
+before. FlowSight then compares the changed step over **equal windows before and after** the date (up to 90 days each,
+never crossing another change on the same step) and gives a rule-based verdict:
+
+| Verdict | Rule (median time in the step, after ÷ before) |
+|---|---|
+| improved | ≤ 0.8 |
+| worse | ≥ 1.2 |
+| unchanged | in between |
+| not enough data | fewer than 20 steps on either side, or a window shorter than 14 days |
+
+In the demo data, routing invoices to the site's clerk (3 June 2026) cuts the median invoice time from about 11 working
+days to about 2, and the average number of invoices waiting from about 140 to about 45. Improvement cards link to the
+before/after of their step whenever a change has been recorded for it.
+
 ### Using your own process map
 
 The map is YAML: [`samples/purchase-to-pay.yaml`](samples/purchase-to-pay.yaml). It is a superset of the
@@ -50,7 +67,7 @@ npm --prefix web run dev
 ```
 
 Open the printed local address. **Requester view:** pick an example request or type a number such as `PR-001783`.
-**Process-owner view:** "where does it pile up?" shows the flow and each stage; "what to change?" shows the improvement cards.
+**Process-owner view:** "where does it pile up?" shows the flow and each stage; "what to change?" shows the improvement cards; "did it work?" shows the before/after of each recorded change.
 The interface is available in English and Turkish.
 
 ## Tests
@@ -64,7 +81,7 @@ npm --prefix web run test -- --run
 
 | Part | Responsibility |
 |---|---|
-| `src/FlowSight.Core` | Event model, working-time calendar (weekends, public and half-day holidays), line and request journeys, comparison with similar requests, period statistics (median, P90, Kaplan–Meier median incl. open items, WIP, ageing, share of lead time), bottleneck ranking, stage drill-down, process map (YAML), waiting reasons, pattern library and improvement cards, JSON contracts |
+| `src/FlowSight.Core` | Event model, working-time calendar (weekends, public and half-day holidays), line and request journeys, comparison with similar requests, period statistics (median, P90, Kaplan–Meier median incl. open items, WIP, ageing, share of lead time), bottleneck ranking, stage drill-down, process map (YAML), waiting reasons, pattern library and improvement cards, change impact (before/after), JSON contracts |
 | `src/FlowSight.Synthetic` | Deterministic purchase-to-pay event log: invented sites, roles, categories and pseudonymous actors |
 | `src/FlowSight.Cli` | `flowsight demo` writes the static JSON the web app reads: requester files and process-owner statistics |
 | `web/` | React + TypeScript; screens read data through a swappable source (static JSON now, an HTTP API when embedded) |
@@ -78,7 +95,7 @@ Design and plans: [`docs/design`](docs/design) · [`docs/plans`](docs/plans).
 | **M1** ✅ | Request tracker on synthetic data |
 | **M2** ✅ | Stage statistics, bottleneck ranking, flow overview, stage drill-down |
 | **M3** ✅ | Waiting reasons, process map, bottleneck patterns and improvement cards |
-| M4 | Before / after measurement of process changes |
+| **M4** ✅ | Before / after measurement of process changes |
 | M5 | CI, live demo on GitHub Pages, v1.0 |
 
 ## License
