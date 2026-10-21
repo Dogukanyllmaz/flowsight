@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The 10 SDK reads the .slnx solution and the latest C# version; the 8 runtime runs the net8.0 tests.
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: .NET tests
+        run: dotnet test -nologo
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Web install
+        run: npm ci
+        working-directory: web
+
+      - name: Web tests
+        run: npm test -- --run
+        working-directory: web
+
+      - name: Web build
+        run: npm run build
+        working-directory: web
+
+      # The term list lives in a repository secret, never in the repository. Only file names are printed.
+      - name: Sensitive-term scan
+        env:
+          TERMS: ${{ secrets.SENSITIVE_TERMS }}
+        run: |
+          if [ -z "$TERMS" ]; then
+            echo "::warning::SENSITIVE_TERMS secret is not set; sensitive-term scan skipped."
+            exit 0
+          fi
+          printf '%s\n' "$TERMS" | tr -d '\r' | sed '/^[[:space:]]*$/d' > "$RUNNER_TEMP/terms.txt"
+          if git grep -liwf "$RUNNER_TEMP/terms.txt" -- . ':!web/package-lock.json'; then
+            echo "::error::Sensitive terms found in the files listed above."
+            exit 1
+          fi
